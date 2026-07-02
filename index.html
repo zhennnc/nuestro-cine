@@ -119,6 +119,18 @@
     letter-spacing:.01em;
   }
   .meta{color:var(--muted);font-size:.78rem;margin-top:5px;letter-spacing:.08em}
+  .imdb{
+    display:inline-flex;align-items:center;gap:6px;margin-top:10px;
+    text-decoration:none;font-size:.72rem;color:var(--muted);
+    border:1px solid var(--border);border-radius:100px;padding:3px 12px;
+    transition:border-color .2s;
+  }
+  .imdb:hover{border-color:#f5c518}
+  .imdb b{
+    background:#f5c518;color:#111;font-weight:800;border-radius:4px;
+    padding:1px 5px;font-size:.68rem;letter-spacing:.02em;
+  }
+  .imdb span{color:var(--text);font-weight:600}
 
   .scores{
     display:grid;grid-template-columns:1fr 1fr;gap:0;margin-top:18px;
@@ -185,14 +197,16 @@ const DATA = [
         id: "housemaid",
         title: "The Housemaid",
         meta: "Paul Feig · 2025 · Thriller psicológico",
-        poster: "https://en.wikipedia.org/wiki/Special:FilePath/The_Housemaid_(2025_film)_poster.jpg",
+        poster: "housemaid.png",
+        imdb: "6.8", imdbUrl: "https://www.imdb.com/title/tt27543632/",
         z: "–", v: "–", zNote: "", vNote: ""
       },
       {
         id: "obsession",
         title: "Obsession",
         meta: "Curry Barker · 2026 · Terror romántico",
-        poster: "https://en.wikipedia.org/wiki/Special:FilePath/Obsession_(2026_film)_poster.jpg",
+        poster: "obsession.png",
+        imdb: "7.4", imdbUrl: "https://www.imdb.com/title/tt37287335/",
         z: "9", v: "7", zNote: "", vNote: ""
       }
     ]
@@ -241,6 +255,7 @@ DATA.forEach((m, i) => {
       <div class="info">
         <h2>${mov.title}</h2>
         <div class="meta">${mov.meta}</div>
+        ${mov.imdb ? `<a class="imdb" href="${mov.imdbUrl}" target="_blank" rel="noopener"><b>IMDb</b><span>${mov.imdb}</span>/10</a>` : ""}
         <div class="scores">
           <div class="score">
             <div class="who">Z</div>
