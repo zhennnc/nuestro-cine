@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Nuestro Cine · Z & V</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;0,800;1,600&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0d0b10;
+    --bg2:#16121d;
+    --card:#1c1724;
+    --gold:#d4a95c;
+    --gold-soft:#e8c98a;
+    --red:#b03a48;
+    --text:#efe9df;
+    --muted:#9b93a8;
+    --border:rgba(212,169,92,.22);
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{
+    font-family:'Inter',sans-serif;
+    background:
+      radial-gradient(ellipse 80% 50% at 50% -10%, rgba(176,58,72,.18), transparent 60%),
+      radial-gradient(ellipse 60% 40% at 80% 110%, rgba(212,169,92,.08), transparent 60%),
+      var(--bg);
+    color:var(--text);
+    min-height:100vh;
+  }
+  header{text-align:center;padding:64px 20px 36px}
+  .kicker{
+    letter-spacing:.55em;text-transform:uppercase;font-size:.68rem;
+    color:var(--gold);font-weight:500;
+  }
+  h1{
+    font-family:'Playfair Display',serif;font-weight:800;
+    font-size:clamp(2.4rem,6vw,4rem);margin:14px 0 10px;line-height:1.05;
+  }
+  h1 em{color:var(--gold-soft);font-style:italic}
+  .subtitle{color:var(--muted);font-weight:300;font-size:.95rem}
+  .initials{
+    display:flex;justify-content:center;gap:14px;align-items:center;margin-top:22px;
+  }
+  .initials .dot{width:4px;height:4px;border-radius:50%;background:var(--gold)}
+  .initials span{
+    font-family:'Playfair Display',serif;font-size:1.4rem;color:var(--gold-soft);
+    border:1px solid var(--border);border-radius:50%;
+    width:52px;height:52px;display:grid;place-items:center;
+  }
+
+  /* Tabs */
+  nav{
+    display:flex;justify-content:center;gap:8px;flex-wrap:wrap;
+    padding:26px 16px 8px;position:sticky;top:0;z-index:5;
+    background:linear-gradient(var(--bg) 70%, transparent);
+  }
+  .tab{
+    background:transparent;border:1px solid var(--border);color:var(--muted);
+    padding:10px 26px;border-radius:100px;cursor:pointer;
+    font-family:'Inter',sans-serif;font-size:.85rem;letter-spacing:.12em;
+    text-transform:uppercase;transition:all .25s;
+  }
+  .tab:hover{color:var(--gold-soft);border-color:var(--gold)}
+  .tab.active{
+    background:linear-gradient(135deg, var(--gold), #a87f3d);
+    color:#191106;border-color:transparent;font-weight:600;
+  }
+
+  main{max-width:1000px;margin:0 auto;padding:30px 20px 90px}
+  .month{display:none;animation:fade .5s ease}
+  .month.active{display:block}
+  @keyframes fade{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+
+  .month-title{
+    text-align:center;font-family:'Playfair Display',serif;font-style:italic;
+    color:var(--muted);font-weight:600;font-size:1.05rem;margin-bottom:34px;
+  }
+  .month-title b{color:var(--gold-soft);font-style:normal}
+
+  .grid{
+    display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,340px));
+    gap:36px;justify-content:center;
+  }
+  .movie{
+    background:linear-gradient(180deg, var(--card), var(--bg2));
+    border:1px solid var(--border);border-radius:18px;overflow:hidden;
+    box-shadow:0 24px 60px rgba(0,0,0,.5);
+    transition:transform .3s, box-shadow .3s;
+  }
+  .movie:hover{transform:translateY(-6px);box-shadow:0 34px 80px rgba(0,0,0,.65)}
+
+  .poster{position:relative;aspect-ratio:2/3;overflow:hidden;background:#0a0810}
+  .poster img{width:100%;height:100%;object-fit:cover;display:block}
+  .poster-fallback{
+    position:absolute;inset:0;display:none;flex-direction:column;
+    align-items:center;justify-content:center;text-align:center;padding:24px;
+    background:
+      radial-gradient(circle at 30% 20%, rgba(176,58,72,.35), transparent 55%),
+      radial-gradient(circle at 75% 85%, rgba(212,169,92,.25), transparent 55%),
+      #14101c;
+  }
+  .poster-fallback .ft{
+    font-family:'Playfair Display',serif;font-size:1.9rem;font-weight:800;
+    line-height:1.15;color:var(--gold-soft);
+  }
+  .poster-fallback .fy{margin-top:12px;letter-spacing:.4em;font-size:.7rem;color:var(--muted)}
+  .poster.noimg img{display:none}
+  .poster.noimg .poster-fallback{display:flex}
+  .poster::after{
+    content:"";position:absolute;inset:0;
+    background:linear-gradient(180deg, transparent 70%, rgba(13,11,16,.85));
+    pointer-events:none;
+  }
+
+  .info{padding:20px 22px 26px;text-align:center}
+  .movie h2{
+    font-family:'Playfair Display',serif;font-size:1.5rem;font-weight:800;
+    letter-spacing:.01em;
+  }
+  .meta{color:var(--muted);font-size:.78rem;margin-top:5px;letter-spacing:.08em}
+
+  .scores{
+    display:grid;grid-template-columns:1fr 1fr;gap:0;margin-top:18px;
+    border-top:1px solid var(--border);padding-top:18px;
+  }
+  .score{padding:0 10px}
+  .score + .score{border-left:1px solid var(--border)}
+  .who{
+    font-family:'Playfair Display',serif;font-size:1.5rem;color:var(--gold);
+    font-weight:800;
+  }
+  .val{
+    font-size:1.25rem;font-weight:600;margin-top:4px;cursor:pointer;
+    border-radius:8px;padding:2px 8px;display:inline-block;transition:background .2s;
+  }
+  .val:hover{background:rgba(212,169,92,.12)}
+  .val small{font-size:.7em;color:var(--muted);font-weight:400}
+  .note{
+    color:var(--muted);font-size:.8rem;font-weight:300;margin-top:6px;
+    font-style:italic;min-height:1.1em;cursor:pointer;border-radius:8px;
+    padding:2px 6px;transition:background .2s;
+  }
+  .note:hover{background:rgba(212,169,92,.1)}
+  .note:empty::before{content:"añadir nota…";opacity:.45}
+
+  footer{
+    text-align:center;color:var(--muted);font-size:.75rem;
+    padding:0 20px 50px;letter-spacing:.15em;
+  }
+  footer .heart{color:var(--red)}
+  .hint{opacity:.6;margin-top:8px;letter-spacing:.05em}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="kicker">Cine Club Mensual</div>
+  <h1>Nuestras <em>Películas</em></h1>
+  <p class="subtitle">Una película, un mes, dos opiniones.</p>
+  <div class="initials"><span>Z</span><i class="dot"></i><span>V</span></div>
+</header>
+
+<nav id="tabs"></nav>
+<main id="months"></main>
+
+<footer>
+  Z <span class="heart">♥</span> V — 2026
+  <div class="hint">Toca una puntuación o una nota para editarla. Se guarda automáticamente en este navegador.</div>
+</footer>
+
+<script>
+/* ============================================================
+   PARA AÑADIR UN MES NUEVO: copia un bloque y cambia los datos.
+   poster: URL de la imagen (si falla, se muestra una portada
+   tipográfica elegante automáticamente).
+   ============================================================ */
+const DATA = [
+  {
+    id: "junio-2026",
+    label: "Junio",
+    title: "Junio <b>2026</b>",
+    movies: [
+      {
+        id: "housemaid",
+        title: "The Housemaid",
+        meta: "Paul Feig · 2025 · Thriller psicológico",
+        poster: "https://en.wikipedia.org/wiki/Special:FilePath/The_Housemaid_(2025_film)_poster.jpg",
+        z: "–", v: "–", zNote: "", vNote: ""
+      },
+      {
+        id: "obsession",
+        title: "Obsession",
+        meta: "Curry Barker · 2026 · Terror romántico",
+        poster: "https://en.wikipedia.org/wiki/Special:FilePath/Obsession_(2026_film)_poster.jpg",
+        z: "9", v: "7", zNote: "", vNote: ""
+      }
+    ]
+  }
+];
+
+const store = {
+  get(k, d){ try{ return localStorage.getItem(k) ?? d }catch(e){ return d } },
+  set(k, v){ try{ localStorage.setItem(k, v) }catch(e){} }
+};
+
+const tabs = document.getElementById("tabs");
+const monthsEl = document.getElementById("months");
+
+DATA.forEach((m, i) => {
+  const btn = document.createElement("button");
+  btn.className = "tab" + (i === 0 ? " active" : "");
+  btn.textContent = m.label;
+  btn.onclick = () => {
+    document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
+    document.querySelectorAll(".month").forEach(s => s.classList.remove("active"));
+    btn.classList.add("active");
+    document.getElementById(m.id).classList.add("active");
+  };
+  tabs.appendChild(btn);
+
+  const sec = document.createElement("section");
+  sec.className = "month" + (i === 0 ? " active" : "");
+  sec.id = m.id;
+  sec.innerHTML = `<div class="month-title">${m.title}</div><div class="grid"></div>`;
+  const grid = sec.querySelector(".grid");
+
+  m.movies.forEach(mov => {
+    const key = m.id + ":" + mov.id;
+    const card = document.createElement("article");
+    card.className = "movie";
+    card.innerHTML = `
+      <div class="poster">
+        <img src="${mov.poster}" alt="Póster de ${mov.title}"
+             onerror="this.closest('.poster').classList.add('noimg')">
+        <div class="poster-fallback">
+          <div class="ft">${mov.title}</div>
+          <div class="fy">${mov.meta.split("·")[1]?.trim() || ""}</div>
+        </div>
+      </div>
+      <div class="info">
+        <h2>${mov.title}</h2>
+        <div class="meta">${mov.meta}</div>
+        <div class="scores">
+          <div class="score">
+            <div class="who">Z</div>
+            <div class="val" data-k="${key}:z">${store.get(key+":z", mov.z)}<small>/10</small></div>
+            <div class="note" data-k="${key}:zn">${store.get(key+":zn", mov.zNote)}</div>
+          </div>
+          <div class="score">
+            <div class="who">V</div>
+            <div class="val" data-k="${key}:v">${store.get(key+":v", mov.v)}<small>/10</small></div>
+            <div class="note" data-k="${key}:vn">${store.get(key+":vn", mov.vNote)}</div>
+          </div>
+        </div>
+      </div>`;
+    grid.appendChild(card);
+  });
+
+  monthsEl.appendChild(sec);
+});
+
+// Edición: puntuaciones
+document.querySelectorAll(".val").forEach(el => {
+  el.onclick = () => {
+    const cur = el.childNodes[0].textContent.trim();
+    const n = prompt("Puntuación (0–10):", cur === "–" ? "" : cur);
+    if (n === null) return;
+    const clean = n.trim() === "" ? "–" : n.trim();
+    el.childNodes[0].textContent = clean;
+    store.set(el.dataset.k, clean);
+  };
+});
+// Edición: notas
+document.querySelectorAll(".note").forEach(el => {
+  el.onclick = () => {
+    const n = prompt("Nota:", el.textContent.trim());
+    if (n === null) return;
+    el.textContent = n.trim();
+    store.set(el.dataset.k, n.trim());
+  };
+});
+</script>
+</body>
+</html>
