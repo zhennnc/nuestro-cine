@@ -399,7 +399,6 @@ const KEY_DATA = 'zv:data';
 const KEY_API  = 'zv:omdb';
 const KEY_GH   = 'zv:ghtoken';
 const DEFAULT_OMDB = '83918a08';
-const DEFAULT_GH_B64 = 'Z2l0aHViX3BhdF8xMUJKV0RSSFEwdDgzajJTVWY0ak1lX1o0bG5BQW9HaXJIMW8xRkJtdlFraXdHS0RYNmk5ZG84WHdqZDRHRE02NjJXRjNSVkJZQmpNbW53aHZP';
 const GH_OWNER = 'zhennnc';
 const GH_REPO  = 'nuestro-cine';
 const GH_BRANCH = 'main';
@@ -522,7 +521,11 @@ async function syncToGithub(){
     try{
       const r = await fetch(`${url}?ref=${GH_BRANCH}`, {headers:{Authorization:`token ${ghToken}`, Accept:'application/vnd.github+json'}});
       if(r.ok){ const d = await r.json(); sha = d.sha; }
-    }catch(e){}
+      else if (r.status !== 404){
+        const err = await r.json().catch(()=>({}));
+        throw new Error('GET ' + r.status + ': ' + (err.message || 'error'));
+      }
+    }catch(e){ if(String(e.message||'').startsWith('GET')) throw e; }
     const content = btoa(unescape(encodeURIComponent(JSON.stringify(items, null, 2))));
     const body = { message: 'Actualiza datos — ' + new Date().toISOString(), content, branch: GH_BRANCH };
     if(sha) body.sha = sha;
@@ -533,10 +536,11 @@ async function syncToGithub(){
     });
     if(!put.ok){
       const err = await put.json().catch(()=>({}));
-      throw new Error(err.message || 'Error al sincronizar');
+      throw new Error('PUT ' + put.status + ': ' + (err.message || 'error al sincronizar'));
     }
   }catch(e){
-    toast('No se pudo sincronizar con GitHub');
+    console.error('sync error', e);
+    toast('No se pudo sincronizar: ' + (e && e.message ? e.message : 'error desconocido'));
   } finally {
     syncing = false;
   }
@@ -1024,8 +1028,8 @@ function openSettings(){
     <p class="hint" style="margin:-6px 0 18px">¿No tienes?
       <a href="https://www.omdbapi.com/apikey.aspx" target="_blank" rel="noopener">Pídela gratis aquí</a> y actívala desde el correo.</p>
     <div class="callout">
-      <p class="hint"><b>Sincronización automática:</b> ${ghToken ? 'activa ✓' : 'no configurada'}.
-      Ya viene activada por defecto: lo que agregues o califiques desde cualquier navegador se sube solo y se ve igual para todos, sin configurar nada. Tarda ~30-60s en reflejarse en la página. Solo usa el campo de abajo si quieres cambiar el token.</p>
+      <p class="hint"><b>Sincronización automática:</b> ${ghToken ? 'activa en este dispositivo ✓' : 'no configurada en este dispositivo'}.
+      Pega aquí tu token de GitHub (uno solo, el mismo en todos los dispositivos) para que lo que agregues o califiques se suba solo y se vea igual para ambos, sin pedírmelo a mí cada vez. El cambio tarda ~30-60s en reflejarse en la página.</p>
       <div class="search-row" style="margin-top:10px">
         <input type="text" id="ghin" value="${esc(ghToken)}" placeholder="Token de GitHub (github_pat_...)">
         <button class="btn" id="ghsave">Guardar</button>
@@ -1112,7 +1116,7 @@ function openSettings(){
   await checkPersist();
   const raw = await load(KEY_DATA);
   omdbKey = (await load(KEY_API)) || window.__ZV_KEY || DEFAULT_OMDB;
-  ghToken = (await load(KEY_GH)) || (function(){ try{ return atob(DEFAULT_GH_B64); }catch(e){ return ''; } })();
+  ghToken = (await load(KEY_GH)) || '';
 
   const remote = await fetchRemoteData();
   if (remote && remote.length){
