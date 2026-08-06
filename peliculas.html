@@ -588,14 +588,17 @@ function renderFilters(){
   $('#filters').querySelectorAll('.chip').forEach(b => b.onclick = () => { filter = b.dataset.f; render(); });
 }
 
+function visible(){ return items.filter(i => !i.deleted); }
+
 function renderStats(){
-  const zs = items.filter(i => i.z != null).map(i => i.z);
-  const vs = items.filter(i => i.v != null).map(i => i.v);
-  const both = items.filter(i => i.z != null && i.v != null);
+  const vis = visible();
+  const zs = vis.filter(i => i.z != null).map(i => i.z);
+  const vs = vis.filter(i => i.v != null).map(i => i.v);
+  const both = vis.filter(i => i.z != null && i.v != null);
   const avg = a => a.length ? (a.reduce((s,n)=>s+n,0)/a.length).toFixed(1) : '—';
   const gap = both.length ? (both.reduce((s,i)=>s+Math.abs(i.z-i.v),0)/both.length).toFixed(1) : '—';
   $('#stats').innerHTML = `
-    <div class="stat"><span class="n">${items.length}</span><span class="l">Títulos</span></div>
+    <div class="stat"><span class="n">${vis.length}</span><span class="l">Títulos</span></div>
     <div class="stat"><span class="n z">${avg(zs)}</span><span class="l">Promedio Z</span></div>
     <div class="stat"><span class="n v">${avg(vs)}</span><span class="l">Promedio V</span></div>
     <div class="stat"><span class="n">${gap}</span><span class="l">Brecha media</span></div>`;
@@ -657,14 +660,15 @@ function cardHTML(it){
 
 function render(){
   renderFilters(); renderStats();
-  const shown = filter === 'all' ? items : items.filter(i => i.type === filter);
+  const vis = visible();
+  const shown = filter === 'all' ? vis : vis.filter(i => i.type === filter);
   const host = $('#months');
   const nav = $('#monthnav');
 
   if(!shown.length){
     nav.innerHTML = '';
     host.innerHTML = `<div class="empty-state">
-      <p>${items.length ? 'Nada de este tipo todavía.' : 'Aquí no hay nada aún. Agrega la primera película, serie o anime.'}</p>
+      <p>${vis.length ? 'Nada de este tipo todavía.' : 'Aquí no hay nada aún. Agrega la primera película, serie o anime.'}</p>
       <button class="btn" id="emptyAdd">Agregar un título</button></div>`;
     const b = $('#emptyAdd'); if(b) b.onclick = openAdd;
     return;
@@ -791,7 +795,10 @@ function openMenu(id){
     it.updatedAt = Date.now();
     await save(); closeLayer(); render(); toast('Guardado');
   };
-  $('#layer [data-del]').onclick = async () => { items = items.filter(i => i.id !== id); await save(); closeLayer(); render(); toast('Eliminado'); };
+  $('#layer [data-del]').onclick = async () => {
+    it.deleted = true; it.updatedAt = Date.now();
+    await save(); closeLayer(); render(); toast('Eliminado');
+  };
   $('#layer').querySelectorAll('[data-close]').forEach(b => b.onclick = closeLayer);
 }
 
@@ -1024,7 +1031,7 @@ async function fetchOne(it){
 
 async function backfill(announce){
   let changed = 0;
-  for (const it of items){
+  for (const it of visible()){
     if (it.sourceId && (!it.poster || !it.rating)){
       if (await fetchOne(it)) changed++;
     }
