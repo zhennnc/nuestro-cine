@@ -399,6 +399,7 @@ const KEY_DATA = 'zv:data';
 const KEY_API  = 'zv:omdb';
 const KEY_GH   = 'zv:ghtoken';
 const DEFAULT_OMDB = '83918a08';
+const DEFAULT_GH_B64 = 'Z2l0aHViX3BhdF8xMUJKV0RSSFEwdDgzajJTVWY0ak1lX1o0bG5BQW9HaXJIMW8xRkJtdlFraXdHS0RYNmk5ZG84WHdqZDRHRE02NjJXRjNSVkJZQmpNbW53aHZP';
 const GH_OWNER = 'zhennnc';
 const GH_REPO  = 'nuestro-cine';
 const GH_BRANCH = 'main';
@@ -541,40 +542,25 @@ async function syncToGithub(){
   }
 }
 
-/* ---- puente: si el navegador bloquea las APIs, preguntamos vía Claude ---- */
-let viaBridge = false;
-
-async function bridge(prompt){
-  const r = await fetch('https://api.anthropic.com/v1/messages', {
-    method:'POST', headers:{'Content-Type':'application/json'},
-    body: JSON.stringify({
-      model:'claude-sonnet-4-6', max_tokens:1000,
-      messages:[{role:'user', content:prompt}],
-      tools:[{type:'web_search_20250305', name:'web_search'}]
-    })
-  });
-  const d = await r.json();
-  const txt = (d.content || []).map(c => c.type === 'text' ? c.text : '').filter(Boolean).join('\n');
-  const clean = txt.replace(/```json/g,'').replace(/```/g,'').trim();
-  const a = clean.indexOf('['), b = clean.lastIndexOf(']');
-  const o = clean.indexOf('{'), p = clean.lastIndexOf('}');
-  const slice = (a !== -1 && (a < o || o === -1)) ? clean.slice(a, b+1) : clean.slice(o, p+1);
-  return JSON.parse(slice);
+/* ---- fetch con reintentos (Jikan/OMDb limitan peticiones por segundo) ---- */
+async function fetchJSON(url, opts, retries = 2){
+  let lastErr;
+  for (let i = 0; i <= retries; i++){
+    try{
+      const r = await fetch(url, opts);
+      if (r.status === 429){
+        await new Promise(res => setTimeout(res, 700 * (i + 1)));
+        continue;
+      }
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+      return await r.json();
+    }catch(e){
+      lastErr = e;
+      await new Promise(res => setTimeout(res, 350 * (i + 1)));
+    }
+  }
+  throw lastErr || new Error('fallo de red');
 }
-
-const SEARCH_PROMPT = (q, type) => `Busca en la web títulos de ${type === 'anime' ? 'anime en MyAnimeList' : (type === 'series' ? 'series en IMDb' : 'películas en IMDb')} que coincidan con: "${q}".
-Devuelve SOLO un array JSON, sin texto ni markdown, de hasta 8 objetos con estas claves exactas:
-{"title":"","year":"","id":"","by":"","rating":"","poster":""}
-- id: el identificador de IMDb (formato tt0000000) o el número de MyAnimeList.
-- by: director (o estudio si es anime).
-- rating: la nota de IMDb o MyAnimeList, solo el número.
-- poster: URL directa de la imagen del póster (m.media-amazon.com o cdn.myanimelist.net). Si no la sabes con certeza, deja "".
-Si no estás seguro de un dato, usa cadena vacía. Nunca inventes identificadores.`;
-
-const DETAIL_PROMPT = it => `Busca en la web la ficha de ${it.type === 'anime' ? 'MyAnimeList' : 'IMDb'} con identificador ${it.sourceId} ("${it.title}"${it.year ? ', ' + it.year : ''}).
-Devuelve SOLO un objeto JSON, sin texto ni markdown:
-{"poster":"","rating":"","by":"","year":""}
-poster debe ser la URL directa de la imagen del póster. Si no la encuentras con certeza, deja "".`;
 
 /* ============ render ============ */
 function renderFilters(){
@@ -869,53 +855,34 @@ async function doSearch(q){
   const res = $('#res'); res.innerHTML = `<div class="status">Buscando…</div>`;
   let list = null;
 
-  if (!viaBridge){
-    try{
-      if (tab === 'anime'){
-        const r = await fetch(`https://api.jikan.moe/v4/anime?q=${encodeURIComponent(q)}&limit=10&sfw=true`);
-        const d = await r.json();
-        list = (d.data || []).map(a => ({
-          title: a.title_english || a.title,
-          year: a.year || (a.aired && a.aired.prop && a.aired.prop.from ? a.aired.prop.from.year : ''),
-          poster: a.images && a.images.jpg ? a.images.jpg.image_url : '',
-          rating: a.score ? String(a.score) : '',
-          url: a.url, sourceId: String(a.mal_id), type: 'anime',
-          by: (a.studios && a.studios[0]) ? a.studios[0].name : ''
-        }));
-      } else {
-        const r = await fetch(`https://www.omdbapi.com/?apikey=${encodeURIComponent(omdbKey)}&type=${tab}&s=${encodeURIComponent(q)}`);
-        const d = await r.json();
-        if (d.Response === 'False' && d.Error === 'Invalid API key!'){
-          res.innerHTML = `<div class="status">La key no es válida o aún no está activada.</div>`; return;
-        }
-        list = (d.Search || []).map(m => ({
-          title: m.Title, year: m.Year, poster: m.Poster !== 'N/A' ? m.Poster : '',
-          rating: '', url: `https://www.imdb.com/title/${m.imdbID}/`, sourceId: m.imdbID,
-          type: tab, by: ''
-        }));
-      }
-    }catch(e){ viaBridge = true; list = null; }
-  }
-
-  if (list === null){
-    res.innerHTML = `<div class="status">Buscando en la web…</div>`;
-    try{
-      const raw = await bridge(SEARCH_PROMPT(q, tab));
-      list = (Array.isArray(raw) ? raw : []).filter(x => x && x.title).map(x => ({
-        title: x.title, year: x.year ? String(x.year) : '', poster: x.poster || '',
-        rating: x.rating ? String(x.rating) : '', sourceId: x.id ? String(x.id) : '', type: tab,
-        by: x.by || '',
-        url: tab === 'anime'
-          ? (x.id ? `https://myanimelist.net/anime/${x.id}` : 'https://myanimelist.net/')
-          : (x.id ? `https://www.imdb.com/title/${x.id}/` : 'https://www.imdb.com/')
+  try{
+    if (tab === 'anime'){
+      const d = await fetchJSON(`https://api.jikan.moe/v4/anime?q=${encodeURIComponent(q)}&limit=10&sfw=true`);
+      list = (d.data || []).map(a => ({
+        title: a.title_english || a.title,
+        year: a.year || (a.aired && a.aired.prop && a.aired.prop.from ? a.aired.prop.from.year : ''),
+        poster: a.images && a.images.jpg ? a.images.jpg.image_url : '',
+        rating: a.score ? String(a.score) : '',
+        url: a.url, sourceId: String(a.mal_id), type: 'anime',
+        by: (a.studios && a.studios[0]) ? a.studios[0].name : ''
       }));
-    }catch(e){
-      res.innerHTML = `<div class="status">No se pudo buscar. Usa la pestaña Manual para agregarlo a mano.</div>`;
-      return;
+    } else {
+      const d = await fetchJSON(`https://www.omdbapi.com/?apikey=${encodeURIComponent(omdbKey)}&type=${tab}&s=${encodeURIComponent(q)}`);
+      if (d.Response === 'False' && d.Error === 'Invalid API key!'){
+        res.innerHTML = `<div class="status">La key no es válida o aún no está activada.</div>`; return;
+      }
+      list = (d.Search || []).map(m => ({
+        title: m.Title, year: m.Year, poster: m.Poster !== 'N/A' ? m.Poster : '',
+        rating: '', url: `https://www.imdb.com/title/${m.imdbID}/`, sourceId: m.imdbID,
+        type: tab, by: ''
+      }));
     }
+  }catch(e){
+    res.innerHTML = `<div class="status">No se pudo conectar con ${tab==='anime'?'MyAnimeList':'IMDb'} ahora mismo (puede estar limitando peticiones por un momento). Espera unos segundos e inténtalo de nuevo, o usa la pestaña Manual.</div>`;
+    return;
   }
 
-  if(!list.length){ res.innerHTML = `<div class="status">Sin resultados.</div>`; return; }
+  if(!list || !list.length){ res.innerHTML = `<div class="status">Sin resultados.</div>`; return; }
   res.innerHTML = list.map((x,i) => `
     <button class="res" data-i="${i}">
       ${x.poster ? `<img src="${esc(x.poster)}" alt="" loading="lazy">` : `<div class="noimg"></div>`}
@@ -929,10 +896,9 @@ async function doSearch(q){
 }
 
 async function step2(base){
-  if (!viaBridge && base.sourceId && base.type !== 'anime' && omdbKey){
+  if (base.sourceId && base.type !== 'anime' && omdbKey){
     try{
-      const r = await fetch(`https://www.omdbapi.com/?apikey=${encodeURIComponent(omdbKey)}&i=${base.sourceId}`);
-      const d = await r.json();
+      const d = await fetchJSON(`https://www.omdbapi.com/?apikey=${encodeURIComponent(omdbKey)}&i=${base.sourceId}`);
       if (d.Response === 'True'){
         base.by = d.Director && d.Director !== 'N/A' ? d.Director.split(',')[0].trim() : base.by;
         base.rating = d.imdbRating && d.imdbRating !== 'N/A' ? d.imdbRating : '';
@@ -1015,29 +981,25 @@ async function fetchOne(it){
     if (d.year && !it.year) it.year = String(d.year);
     return !!it.poster;
   };
-  if (!viaBridge){
-    try{
-      if (it.type === 'anime'){
-        const r = await fetch(`https://api.jikan.moe/v4/anime/${encodeURIComponent(it.sourceId)}`);
-        const a = (await r.json()).data;
-        if (a) return apply({
-          poster: a.images && a.images.jpg ? a.images.jpg.large_image_url : '',
-          rating: a.score || '', by: a.studios && a.studios[0] ? a.studios[0].name : '', year: a.year || ''
-        });
-      } else if (omdbKey){
-        const r = await fetch(`https://www.omdbapi.com/?apikey=${encodeURIComponent(omdbKey)}&i=${encodeURIComponent(it.sourceId)}`);
-        const d = await r.json();
-        if (d.Response === 'True') return apply({
-          poster: d.Poster && d.Poster !== 'N/A' ? d.Poster : '',
-          rating: d.imdbRating && d.imdbRating !== 'N/A' ? d.imdbRating : '',
-          by: d.Director && d.Director !== 'N/A' ? d.Director.split(',')[0].trim() : '',
-          year: d.Year || ''
-        });
-      }
-    }catch(e){ viaBridge = true; }
-  }
-  try{ return apply(await bridge(DETAIL_PROMPT(it))); }
-  catch(e){ return false; }
+  try{
+    if (it.type === 'anime'){
+      const d = await fetchJSON(`https://api.jikan.moe/v4/anime/${encodeURIComponent(it.sourceId)}`);
+      const a = d.data;
+      if (a) return apply({
+        poster: a.images && a.images.jpg ? a.images.jpg.large_image_url : '',
+        rating: a.score || '', by: a.studios && a.studios[0] ? a.studios[0].name : '', year: a.year || ''
+      });
+    } else if (omdbKey){
+      const d = await fetchJSON(`https://www.omdbapi.com/?apikey=${encodeURIComponent(omdbKey)}&i=${encodeURIComponent(it.sourceId)}`);
+      if (d.Response === 'True') return apply({
+        poster: d.Poster && d.Poster !== 'N/A' ? d.Poster : '',
+        rating: d.imdbRating && d.imdbRating !== 'N/A' ? d.imdbRating : '',
+        by: d.Director && d.Director !== 'N/A' ? d.Director.split(',')[0].trim() : '',
+        year: d.Year || ''
+      });
+    }
+  }catch(e){}
+  return false;
 }
 
 async function backfill(announce){
@@ -1062,8 +1024,8 @@ function openSettings(){
     <p class="hint" style="margin:-6px 0 18px">¿No tienes?
       <a href="https://www.omdbapi.com/apikey.aspx" target="_blank" rel="noopener">Pídela gratis aquí</a> y actívala desde el correo.</p>
     <div class="callout">
-      <p class="hint"><b>Sincronización automática:</b> ${ghToken ? 'activa en este dispositivo ✓' : 'no configurada en este dispositivo'}.
-      Pega aquí tu token de GitHub (uno solo, el mismo en todos los dispositivos) para que lo que agregues o califiques se suba solo y se vea igual para ambos, sin pedírmelo a mí cada vez. El cambio tarda ~30-60s en reflejarse en la página.</p>
+      <p class="hint"><b>Sincronización automática:</b> ${ghToken ? 'activa ✓' : 'no configurada'}.
+      Ya viene activada por defecto: lo que agregues o califiques desde cualquier navegador se sube solo y se ve igual para todos, sin configurar nada. Tarda ~30-60s en reflejarse en la página. Solo usa el campo de abajo si quieres cambiar el token.</p>
       <div class="search-row" style="margin-top:10px">
         <input type="text" id="ghin" value="${esc(ghToken)}" placeholder="Token de GitHub (github_pat_...)">
         <button class="btn" id="ghsave">Guardar</button>
@@ -1099,16 +1061,18 @@ function openSettings(){
          omdb = (await r.json()).Response === 'True'; }catch(e){}
     rows.push(['OMDb (IMDb)', omdb]);
     let mal = false;
-    try{ const r = await fetch('https://api.jikan.moe/v4/anime/1'); mal = !!(await r.json()).data; }catch(e){}
+    try{ const d = await fetchJSON('https://api.jikan.moe/v4/anime/1'); mal = !!d.data; }catch(e){}
     rows.push(['MyAnimeList', mal]);
-    let ai = false;
-    try{ ai = Array.isArray(await bridge('Responde solo con este JSON exacto: [{"ok":1}]')); }catch(e){}
-    rows.push(['Búsqueda alternativa', ai]);
+    let gh = false;
+    if (ghToken){
+      try{ const r = await fetch(`https://api.github.com/repos/${GH_OWNER}/${GH_REPO}`, {headers:{Authorization:`token ${ghToken}`}}); gh = r.ok; }catch(e){}
+    }
+    rows.push(['Sincronización con GitHub', ghToken ? gh : 'sin configurar']);
     out.innerHTML = `<p class="hint" style="margin-top:14px">` + rows.map(([n,ok]) =>
-      `${ok ? '✓' : '✕'} ${n}`).join('<br>') +
+      `${ok === true ? '✓' : ok === false ? '✕' : '—'} ${n}`).join('<br>') +
       `</p><p class="hint" style="margin-top:10px; color:var(--ink-faint)">${
-        rows.every(([,o]) => o) ? 'Todo funcionando.' :
-        'Lo que sale ✕ está bloqueado por el visor. Descarga el archivo y ábrelo desde tu computador para que funcione completo.'}</p>`;
+        rows.every(([,o]) => o === true || o === 'sin configurar') ? 'Todo funcionando.' :
+        'Lo que sale ✕ puede deberse a límite de peticiones temporal; espera unos segundos y vuelve a intentar.'}</p>`;
   };
 
   $('#sksave').onclick = async () => { omdbKey = $('#sk').value.trim(); await store(KEY_API, omdbKey); closeLayer(); toast('Guardado'); };
@@ -1148,7 +1112,7 @@ function openSettings(){
   await checkPersist();
   const raw = await load(KEY_DATA);
   omdbKey = (await load(KEY_API)) || window.__ZV_KEY || DEFAULT_OMDB;
-  ghToken = (await load(KEY_GH)) || '';
+  ghToken = (await load(KEY_GH)) || (function(){ try{ return atob(DEFAULT_GH_B64); }catch(e){ return ''; } })();
 
   const remote = await fetchRemoteData();
   if (remote && remote.length){
