@@ -522,7 +522,7 @@ async function syncToGithub(){
     for (let attempt = 0; attempt < maxTries; attempt++){
       try{
         let sha = null;
-        const r = await fetch(`${url}?ref=${GH_BRANCH}`, {headers:{Authorization:`token ${ghToken}`, Accept:'application/vnd.github+json'}});
+        const r = await fetch(`${url}?ref=${GH_BRANCH}&t=${Date.now()}`, {cache:'no-store', headers:{Authorization:`token ${ghToken}`, Accept:'application/vnd.github+json'}});
         if (r.ok){ const d = await r.json(); sha = d.sha; }
         else if (r.status !== 404){
           const err = await r.json().catch(()=>({}));
