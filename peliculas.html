@@ -1,0 +1,1118 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Z &amp; V — lo que vimos</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300;9..144,400;9..144,500;9..144,600&family=Inter+Tight:wght@400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#FCFCFA;
+  --card:#FFFFFF;
+  --ink:#14171C;
+  --ink-soft:#6E757F;
+  --ink-faint:#A2A8AF;
+  --rule:#E5E6E2;
+  --z:#25707C;
+  --z-soft:rgba(37,112,124,.12);
+  --v:#9C4A78;
+  --v-soft:rgba(156,74,120,.12);
+  --sun:#F0B429;
+  --r-s:8px; --r-m:14px; --r-l:20px;
+  --shadow:0 1px 2px rgba(20,23,28,.04), 0 16px 30px -22px rgba(20,23,28,.35);
+  --shadow-lift:0 2px 4px rgba(20,23,28,.05), 0 26px 44px -24px rgba(20,23,28,.4);
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  background:var(--paper);
+  color:var(--ink);
+  font-family:'Inter Tight',ui-sans-serif,system-ui,-apple-system,'Segoe UI',sans-serif;
+  font-size:15px; line-height:1.5;
+  -webkit-font-smoothing:antialiased;
+  min-height:100vh;
+  overflow-x:hidden;
+}
+/* ---- luz natural ---- */
+body::before{
+  content:''; position:fixed; inset:0; z-index:0; pointer-events:none;
+  background:
+    radial-gradient(1100px 680px at 82% -12%, rgba(255,209,128,.34), transparent 62%),
+    radial-gradient(900px 720px at 4% -6%, rgba(170,203,231,.32), transparent 60%),
+    radial-gradient(700px 900px at 100% 60%, rgba(255,232,199,.20), transparent 65%);
+}
+/* haz de luz de ventana */
+body::after{
+  content:''; position:fixed; inset:-20% -30%; z-index:0; pointer-events:none;
+  background:linear-gradient(104deg, transparent 34%, rgba(255,246,226,.75) 41%, transparent 47%, transparent 55%, rgba(255,246,226,.5) 60%, transparent 66%);
+  filter:blur(2px);
+  opacity:.65;
+}
+.grain{
+  position:fixed; inset:0; z-index:1; pointer-events:none; opacity:.035;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+.wrap{position:relative; z-index:2; max-width:1180px; margin:0 auto; padding:0 22px 120px}
+
+/* ---- barra ---- */
+.bar{
+  position:sticky; top:0; z-index:40;
+  display:flex; align-items:center; gap:14px;
+  padding:14px 0 13px; margin-bottom:6px;
+  border-bottom:1px solid transparent;
+  transition:border-color .25s;
+}
+.bar::before{
+  content:''; position:absolute; top:0; bottom:-1px; z-index:-1;
+  left:50%; margin-left:-50vw; width:100vw;
+  background:rgba(252,252,250,.88);
+  backdrop-filter:blur(18px) saturate(1.15);
+  -webkit-backdrop-filter:blur(18px) saturate(1.15);
+}
+.bar.stuck{border-bottom-color:var(--rule)}
+.bar.stuck::before{box-shadow:0 1px 0 var(--rule)}
+.mark{font-family:'Fraunces',Georgia,serif; font-size:19px; font-weight:500; letter-spacing:-.01em; white-space:nowrap}
+.mark .amp{color:var(--ink-faint); font-style:italic; padding:0 1px}
+.bar-spacer{flex:1}
+.filters{display:flex; gap:5px; overflow-x:auto; scrollbar-width:none}
+.filters::-webkit-scrollbar{display:none}
+.chip{
+  font:inherit; font-size:12.5px; letter-spacing:.01em;
+  padding:6px 12px; border-radius:999px; cursor:pointer; white-space:nowrap;
+  border:1px solid var(--rule); background:rgba(255,255,255,.7); color:var(--ink-soft);
+  transition:background .18s, color .18s, border-color .18s;
+}
+.chip:hover{color:var(--ink); border-color:#D4D6D1}
+.chip[aria-pressed="true"]{background:var(--ink); color:#fff; border-color:var(--ink)}
+.icon-btn{
+  width:34px; height:34px; display:grid; place-items:center; flex:none;
+  border-radius:999px; border:1px solid var(--rule); background:rgba(255,255,255,.7);
+  color:var(--ink-soft); cursor:pointer; transition:.18s;
+}
+.icon-btn:hover{color:var(--ink); border-color:#D4D6D1; background:#fff}
+.add-btn{
+  width:38px; height:38px; flex:none; border:0; border-radius:999px;
+  background:var(--ink); color:#fff; cursor:pointer;
+  display:grid; place-items:center; font-size:20px; line-height:1;
+  box-shadow:0 6px 18px -8px rgba(20,23,28,.6);
+  transition:transform .2s cubic-bezier(.2,.9,.3,1.2), background .2s;
+}
+.add-btn:hover{transform:scale(1.08) rotate(90deg)}
+:focus-visible{outline:2px solid var(--z); outline-offset:2px; border-radius:4px}
+
+/* ---- hero ---- */
+.hero{padding:56px 0 30px}
+.eyebrow{
+  font-family:'DM Mono',ui-monospace,monospace; font-size:11px; letter-spacing:.16em;
+  text-transform:uppercase; color:var(--ink-faint); margin-bottom:16px;
+}
+h1{
+  font-family:'Fraunces',Georgia,serif; font-weight:300;
+  font-size:clamp(38px,7.5vw,72px); line-height:1.02; letter-spacing:-.025em;
+  margin:0;
+}
+h1 em{font-style:italic; font-weight:400}
+.sub{color:var(--ink-soft); font-size:15px; max-width:46ch; margin:0}
+
+.stats{display:flex; flex-wrap:wrap; gap:34px; margin-top:34px; padding-top:26px; border-top:1px solid var(--rule)}
+.stat{min-width:74px}
+.stat .n{font-family:'Fraunces',Georgia,serif; font-size:30px; font-weight:400; line-height:1; letter-spacing:-.02em; display:block}
+.stat .n.z{color:var(--z)} .stat .n.v{color:var(--v)}
+.stat .l{font-family:'DM Mono',monospace; font-size:10.5px; letter-spacing:.11em; text-transform:uppercase; color:var(--ink-faint); margin-top:8px; display:block}
+
+/* ---- mes ---- */
+.warn{
+  display:flex; align-items:center; gap:14px; flex-wrap:wrap;
+  margin-top:18px; padding:13px 16px; border-radius:var(--r-m);
+  background:#FBF2E8; border:1px solid #F0DCC4; color:#7A5A33; font-size:13px;
+}
+.warn span{flex:1; min-width:220px}
+.warn .btn{background:#7A5A33; border-color:#7A5A33; font-size:12.5px; padding:8px 14px}
+
+/* ---- pestañas de mes ---- */
+.mnav{
+  display:flex; gap:4px; overflow-x:auto; scrollbar-width:none;
+  padding:0 0 14px; margin-top:34px; border-bottom:1px solid var(--rule);
+}
+.mnav::-webkit-scrollbar{display:none}
+.mtab{
+  font-family:'Fraunces',Georgia,serif; font-size:19px; font-weight:400; letter-spacing:-.015em;
+  text-transform:lowercase; white-space:nowrap; cursor:pointer;
+  display:flex; align-items:baseline; gap:5px;
+  padding:7px 14px; border-radius:999px; border:1px solid transparent;
+  background:none; color:var(--ink-faint); transition:color .18s, background .18s;
+}
+.mtab i{font-family:'DM Mono',monospace; font-size:9.5px; font-style:normal; letter-spacing:.06em; opacity:.75}
+.mtab b{
+  font-family:'DM Mono',monospace; font-size:9.5px; font-weight:400;
+  padding:2px 6px; border-radius:5px; margin-left:3px;
+  background:rgba(20,23,28,.055); color:var(--ink-faint);
+}
+.mtab:hover{color:var(--ink-soft)}
+.mtab[aria-pressed="true"]{color:var(--ink); background:#F2F2EE}
+.mtab[aria-pressed="true"] b{background:rgba(20,23,28,.09); color:var(--ink-soft)}
+.mtab.all{font-family:'Inter Tight',sans-serif; font-size:13px; letter-spacing:.01em}
+
+.month{margin-top:52px}
+.month.solo{margin-top:28px}
+.month-head{display:flex; align-items:baseline; gap:14px; margin-bottom:20px}
+.month-head h2{
+  font-family:'Fraunces',Georgia,serif; font-weight:400; font-size:27px;
+  letter-spacing:-.02em; margin:0; text-transform:lowercase;
+}
+.month-head .yr{font-family:'DM Mono',monospace; font-size:11px; color:var(--ink-faint); letter-spacing:.08em}
+.month-head .line{flex:1; height:1px; background:var(--rule)}
+.month-head .ct{font-family:'DM Mono',monospace; font-size:11px; color:var(--ink-faint)}
+
+.grid{display:grid; grid-template-columns:repeat(auto-fill,minmax(158px,1fr)); gap:26px 20px}
+
+/* ---- tarjeta ---- */
+.card{position:relative; animation:rise .5s cubic-bezier(.2,.7,.3,1) both}
+@keyframes rise{from{opacity:0; transform:translateY(10px)} to{opacity:1; transform:none}}
+.poster{
+  position:relative; display:block; aspect-ratio:2/3; border-radius:var(--r-m);
+  overflow:hidden; background:#EFEFEA; box-shadow:var(--shadow);
+  transition:transform .3s cubic-bezier(.2,.8,.3,1), box-shadow .3s;
+}
+.card:hover .poster{transform:translateY(-4px); box-shadow:var(--shadow-lift)}
+.poster img{width:100%; height:100%; object-fit:cover; display:block}
+.ph{
+  width:100%; height:100%; display:flex; flex-direction:column; justify-content:space-between;
+  padding:14px; background:linear-gradient(158deg, var(--c1), var(--c2));
+}
+.ph-type{font-family:'DM Mono',monospace; font-size:8.5px; letter-spacing:.14em; text-transform:uppercase; color:var(--c3); opacity:.7}
+.ph-rule{height:1px; background:var(--c3); opacity:.22; margin:9px 0 10px}
+.ph-title{font-family:'Fraunces',Georgia,serif; font-size:19px; line-height:1.12; letter-spacing:-.015em; color:var(--c3); display:block}
+.ph-year{font-family:'DM Mono',monospace; font-size:9.5px; letter-spacing:.1em; color:var(--c3); opacity:.6; margin-top:7px; display:block}
+.ph-load{
+  margin-top:11px; align-self:flex-start; font:inherit; font-size:10.5px;
+  padding:5px 10px; border-radius:999px; cursor:pointer;
+  border:1px solid rgba(255,255,255,.7); background:rgba(255,255,255,.5); color:var(--c3);
+  transition:.16s;
+}
+.ph-load:hover{background:#fff}
+.ph-load:disabled{opacity:.5; cursor:default}
+.src{
+  position:absolute; top:9px; left:9px; z-index:2;
+  font-family:'DM Mono',monospace; font-size:9.5px; letter-spacing:.06em;
+  padding:4px 7px; border-radius:6px; background:rgba(255,255,255,.93);
+  color:var(--ink); box-shadow:0 2px 8px rgba(20,23,28,.14);
+  display:flex; align-items:center; gap:5px; text-decoration:none;
+  opacity:0; transform:translateY(-4px); transition:.22s;
+}
+.card:hover .src, .src:focus-visible{opacity:1; transform:none}
+.src b{font-weight:500}
+.src .star{color:var(--sun)}
+.menu-btn{
+  position:absolute; top:9px; right:9px; z-index:2; width:24px; height:24px;
+  border:0; border-radius:7px; background:rgba(255,255,255,.93); color:var(--ink-soft);
+  cursor:pointer; display:grid; place-items:center; font-size:13px; line-height:1;
+  box-shadow:0 2px 8px rgba(20,23,28,.14); opacity:0; transition:.22s;
+}
+.card:hover .menu-btn, .menu-btn:focus-visible{opacity:1}
+.menu-btn:hover{color:var(--ink)}
+
+.meta{padding:12px 2px 0}
+.t{font-family:'Fraunces',Georgia,serif; font-size:15.5px; font-weight:400; line-height:1.25; letter-spacing:-.01em; margin:0 0 4px}
+.d{font-size:12px; color:var(--ink-soft); margin:0; display:flex; gap:6px; flex-wrap:wrap}
+.d .dot-sep{color:var(--ink-faint)}
+
+/* ---- escala firma ---- */
+.scale{position:relative; height:16px; margin:13px 0 9px}
+.track{position:absolute; top:7px; left:0; right:0; height:1.5px; background:var(--rule); border-radius:2px}
+.span{position:absolute; top:7px; height:1.5px; border-radius:2px; background:linear-gradient(90deg,var(--z),var(--v)); opacity:.4; transition:.35s cubic-bezier(.2,.8,.3,1)}
+.pt{
+  position:absolute; top:2px; width:11px; height:11px; margin-left:-5.5px; border-radius:50%;
+  border:2px solid var(--card); transition:left .35s cubic-bezier(.2,.8,.3,1);
+}
+.pt.z{background:var(--z)} .pt.v{background:var(--v)}
+.notes{display:flex; gap:6px}
+.note{
+  flex:1; display:flex; align-items:center; justify-content:space-between; gap:6px;
+  font-family:'DM Mono',monospace; font-size:12px;
+  padding:5px 8px; border-radius:var(--r-s); cursor:pointer;
+  border:1px solid transparent; transition:.18s;
+}
+.note.z{background:var(--z-soft); color:var(--z)}
+.note.v{background:var(--v-soft); color:var(--v)}
+.note:hover{border-color:currentColor}
+.note .who{font-size:10px; letter-spacing:.1em; opacity:.62}
+.note .val{font-weight:500; font-size:13px}
+.note.empty{background:#F4F4F1; color:var(--ink-faint)}
+
+/* ---- vacío ---- */
+.empty-state{
+  text-align:center; padding:80px 20px; border:1px dashed var(--rule);
+  border-radius:var(--r-l); background:rgba(255,255,255,.4); margin-top:40px;
+}
+.empty-state p{color:var(--ink-soft); margin:0 0 18px; font-size:14px}
+.btn{
+  font:inherit; font-size:13.5px; padding:10px 18px; border-radius:999px; cursor:pointer;
+  border:1px solid var(--ink); background:var(--ink); color:#fff; transition:.18s;
+}
+.btn:hover{opacity:.85}
+.btn.ghost{background:transparent; color:var(--ink); border-color:var(--rule)}
+.btn.ghost:hover{border-color:var(--ink); opacity:1}
+.btn.danger{background:transparent; border-color:#E4C9C9; color:#A33B3B}
+.btn.danger:hover{background:#FDF3F3}
+.btn:disabled{opacity:.4; cursor:not-allowed}
+
+/* ---- modal ---- */
+.backdrop{
+  position:fixed; inset:0; z-index:90; background:rgba(28,30,34,.28);
+  backdrop-filter:blur(3px); -webkit-backdrop-filter:blur(3px);
+  display:flex; align-items:center; justify-content:center; padding:20px;
+  animation:fade .2s both;
+}
+@keyframes fade{from{opacity:0} to{opacity:1}}
+.modal{
+  width:100%; max-width:560px; max-height:86vh; overflow:auto;
+  background:var(--card); border-radius:var(--r-l); padding:26px;
+  box-shadow:0 40px 80px -30px rgba(20,23,28,.5); animation:pop .28s cubic-bezier(.2,.9,.3,1.1) both;
+}
+.modal.sm{max-width:400px}
+@keyframes pop{from{opacity:0; transform:translateY(14px) scale(.97)} to{opacity:1; transform:none}}
+.modal h3{font-family:'Fraunces',Georgia,serif; font-weight:400; font-size:22px; letter-spacing:-.02em; margin:0 0 4px}
+.modal .lead{color:var(--ink-soft); font-size:13.5px; margin:0 0 20px}
+.modal-head{display:flex; justify-content:space-between; align-items:flex-start; gap:12px}
+.x{border:0; background:none; font-size:20px; color:var(--ink-faint); cursor:pointer; line-height:1; padding:2px 4px}
+.x:hover{color:var(--ink)}
+
+.tabs{display:flex; gap:4px; padding:3px; background:#F4F4F1; border-radius:999px; margin-bottom:18px}
+.tabs button{
+  flex:1; font:inherit; font-size:12.5px; padding:7px 6px; border:0; border-radius:999px;
+  background:none; color:var(--ink-soft); cursor:pointer; transition:.18s;
+}
+.tabs button[aria-selected="true"]{background:#fff; color:var(--ink); box-shadow:0 1px 3px rgba(20,23,28,.1)}
+
+label{display:block; font-family:'DM Mono',monospace; font-size:10px; letter-spacing:.11em; text-transform:uppercase; color:var(--ink-faint); margin-bottom:7px}
+input[type=text], input[type=search], select{
+  width:100%; font:inherit; font-size:14px; padding:10px 13px;
+  border:1px solid var(--rule); border-radius:var(--r-s); background:#FDFDFC; color:var(--ink);
+}
+input:focus, select:focus{outline:none; border-color:var(--ink)}
+.field{margin-bottom:16px}
+.row{display:flex; gap:10px}
+.row > *{flex:1}
+.search-row{display:flex; gap:8px}
+.search-row input{flex:1}
+
+.results{margin-top:16px; display:flex; flex-direction:column; gap:4px; max-height:340px; overflow:auto}
+.res{
+  display:flex; gap:12px; align-items:center; padding:8px; border-radius:var(--r-s);
+  cursor:pointer; border:1px solid transparent; text-align:left; background:none; font:inherit; width:100%;
+}
+.res:hover{background:#F7F7F4; border-color:var(--rule)}
+.res img, .res .noimg{width:40px; height:60px; object-fit:cover; border-radius:5px; flex:none; background:#EFEFEA}
+.res .info{min-width:0}
+.res .rt{font-family:'Fraunces',Georgia,serif; font-size:14.5px; line-height:1.2; display:block; overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
+.res .rm{font-family:'DM Mono',monospace; font-size:11px; color:var(--ink-faint); margin-top:3px; display:block}
+.hint{font-size:12.5px; color:var(--ink-soft); line-height:1.55}
+.hint a{color:var(--z)}
+.callout{background:#FBF7EC; border:1px solid #F0E6CF; border-radius:var(--r-m); padding:14px 16px; margin-bottom:16px}
+.callout .hint{color:#6B5C3C}
+.callout a{color:#8A6A1F}
+.status{font-family:'DM Mono',monospace; font-size:11.5px; color:var(--ink-faint); padding:14px 2px; text-align:center}
+
+.preview{display:flex; gap:14px; margin-bottom:20px; align-items:flex-start}
+.preview img, .preview .noimg{width:74px; height:111px; object-fit:cover; border-radius:var(--r-s); flex:none; background:#EFEFEA}
+.preview h4{font-family:'Fraunces',Georgia,serif; font-weight:400; font-size:19px; margin:0 0 4px; letter-spacing:-.01em}
+.preview p{margin:0; font-size:12.5px; color:var(--ink-soft)}
+
+.grades{display:grid; grid-template-columns:repeat(5,1fr); gap:6px}
+.grades.ten{grid-template-columns:repeat(10,1fr)}
+.grade{
+  font-family:'DM Mono',monospace; font-size:14px; padding:11px 0; border-radius:var(--r-s);
+  border:1px solid var(--rule); background:#FDFDFC; color:var(--ink-soft); cursor:pointer; transition:.14s;
+}
+.grade:hover{border-color:var(--ink); color:var(--ink)}
+.grade[aria-pressed="true"]{color:#fff; border-color:transparent}
+.grade.z[aria-pressed="true"]{background:var(--z)}
+.grade.v[aria-pressed="true"]{background:var(--v)}
+.actions{display:flex; gap:8px; justify-content:flex-end; margin-top:22px; flex-wrap:wrap}
+.actions .left{margin-right:auto}
+.who-label{display:flex; align-items:center; gap:7px; margin-bottom:8px}
+.who-label .swatch{width:8px; height:8px; border-radius:50%}
+.who-label .swatch.z{background:var(--z)} .who-label .swatch.v{background:var(--v)}
+.who-label span{font-family:'DM Mono',monospace; font-size:10px; letter-spacing:.11em; text-transform:uppercase; color:var(--ink-faint)}
+
+.toast{
+  position:fixed; bottom:24px; left:50%; transform:translateX(-50%); z-index:120;
+  background:var(--ink); color:#fff; font-size:13px; padding:11px 18px; border-radius:999px;
+  box-shadow:0 14px 30px -12px rgba(20,23,28,.6); animation:toast .3s cubic-bezier(.2,.9,.3,1.2) both;
+}
+@keyframes toast{from{opacity:0; transform:translateX(-50%) translateY(10px)} to{opacity:1; transform:translateX(-50%)}}
+
+footer{margin-top:70px; padding-top:22px; border-top:1px solid var(--rule); font-family:'DM Mono',monospace; font-size:10.5px; letter-spacing:.06em; color:var(--ink-faint); display:flex; justify-content:space-between; gap:12px; flex-wrap:wrap}
+
+@media (max-width:640px){
+  .wrap{padding:0 16px 100px}
+  .hero{padding:38px 0 24px}
+  .stats{gap:26px}
+  .grid{grid-template-columns:repeat(auto-fill,minmax(132px,1fr)); gap:22px 14px}
+  .modal{padding:20px; max-height:92vh}
+  .grades.ten{grid-template-columns:repeat(5,1fr)}
+  .bar .mark{font-size:16px}
+  .src, .menu-btn{opacity:1}
+}
+@media (prefers-reduced-motion:reduce){
+  *{animation-duration:.01ms !important; transition-duration:.01ms !important}
+}
+</style>
+</head>
+<body>
+<div class="grain"></div>
+
+<div class="wrap">
+  <header class="bar">
+    <div class="mark">Z <span class="amp">&amp;</span> V</div>
+    <div class="bar-spacer"></div>
+    <nav class="filters" id="filters" aria-label="Filtrar por tipo"></nav>
+    <button class="icon-btn" id="settingsBtn" title="Ajustes" aria-label="Ajustes">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.6 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+    </button>
+    <button class="add-btn" id="addBtn" title="Agregar título" aria-label="Agregar título">+</button>
+  </header>
+
+  <section class="hero">
+    <h1>Todo lo que <em>vimos</em><br>juntos.</h1>
+    <div class="stats" id="stats"></div>
+  </section>
+
+  <nav class="mnav" id="monthnav" aria-label="Navegar por mes"></nav>
+
+  <main id="months"></main>
+
+  <footer>
+    <span>Datos de IMDb vía OMDb · anime vía MyAnimeList (Jikan)</span>
+    <span id="storeNote"></span>
+  </footer>
+</div>
+
+<div id="layer"></div>
+
+<script>
+/* ============ almacenamiento ============ */
+const KEY_DATA = 'zv:data';
+const KEY_API  = 'zv:omdb';
+const DEFAULT_OMDB = '83918a08';
+let memory = {};
+let persistOK = false;
+
+async function store(k, v){
+  memory[k] = v;
+  let ok = false;
+  try{
+    if (window.storage && window.storage.set){ await window.storage.set(k, v); ok = true; }
+  }catch(e){}
+  try{ localStorage.setItem(k, v); ok = true; }catch(e){}
+  return ok;
+}
+
+async function load(k){
+  let a = null, b = null;
+  try{
+    if (window.storage && window.storage.get){
+      const r = await window.storage.get(k);
+      if (r && r.value) a = r.value;
+    }
+  }catch(e){}
+  try{ b = localStorage.getItem(k); }catch(e){}
+  // nos quedamos con el que tenga más contenido, para no perder nada
+  if (a && b) return b.length >= a.length ? b : a;
+  return a || b || memory[k] || null;
+}
+
+async function checkPersist(){
+  const t = 'zv:probe:' + Date.now();
+  await store(t, '1');
+  const got = await load(t);
+  try{ if (window.storage && window.storage.delete) await window.storage.delete(t); }catch(e){}
+  try{ localStorage.removeItem(t); }catch(e){}
+  delete memory[t];
+  persistOK = got === '1';
+  return persistOK;
+}
+
+/* ============ estado ============ */
+const MESES = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
+const START = '2026-06';
+
+let items = [];
+let omdbKey = '';
+let filter = 'all';
+let monthSel = null;
+
+const HOUSEMAID_IMG = 'https://image.tmdb.org/t/p/w780/bEcRxVHyCmwTYYlVVLLgGz2GdWW.jpg';
+
+const SEED = [{
+  id: 'seed-housemaid',
+  title: 'The Housemaid',
+  year: '2025',
+  type: 'movie',
+  by: 'Paul Feig',
+  poster: '',
+  sourceId: 'tt27543632',
+  url: 'https://www.imdb.com/title/tt27543632/',
+  rating: '6.8',
+  month: '2026-06',
+  z: 6, v: 8
+}];
+
+/* ============ utilidades ============ */
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const label = m => { const [y,mo] = m.split('-'); return {name: MESES[+mo-1], year: y}; };
+const TYPE_ES = {movie:'Película', series:'Serie', anime:'Anime'};
+
+function thisMonth(){
+  const d = new Date();
+  const m = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
+  return m < START ? START : m;
+}
+function monthOptions(){
+  const out = [];
+  let [y,m] = START.split('-').map(Number);
+  const end = new Date(); const ey = end.getFullYear(), em = end.getMonth()+1+6;
+  for(let i=0;i<48;i++){
+    const key = `${y}-${String(m).padStart(2,'0')}`;
+    out.push(key);
+    if (y > ey || (y === ey && m >= em)) break;
+    m++; if(m>12){m=1;y++;}
+  }
+  return out;
+}
+function toast(msg){
+  const el = document.createElement('div');
+  el.className = 'toast'; el.textContent = msg; el.setAttribute('role','status');
+  document.body.appendChild(el);
+  setTimeout(()=>el.remove(), 2400);
+}
+async function save(){ await store(KEY_DATA, JSON.stringify(items)); }
+
+/* ---- puente: si el navegador bloquea las APIs, preguntamos vía Claude ---- */
+let viaBridge = false;
+
+async function bridge(prompt){
+  const r = await fetch('https://api.anthropic.com/v1/messages', {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({
+      model:'claude-sonnet-4-6', max_tokens:1000,
+      messages:[{role:'user', content:prompt}],
+      tools:[{type:'web_search_20250305', name:'web_search'}]
+    })
+  });
+  const d = await r.json();
+  const txt = (d.content || []).map(c => c.type === 'text' ? c.text : '').filter(Boolean).join('\n');
+  const clean = txt.replace(/```json/g,'').replace(/```/g,'').trim();
+  const a = clean.indexOf('['), b = clean.lastIndexOf(']');
+  const o = clean.indexOf('{'), p = clean.lastIndexOf('}');
+  const slice = (a !== -1 && (a < o || o === -1)) ? clean.slice(a, b+1) : clean.slice(o, p+1);
+  return JSON.parse(slice);
+}
+
+const SEARCH_PROMPT = (q, type) => `Busca en la web títulos de ${type === 'anime' ? 'anime en MyAnimeList' : (type === 'series' ? 'series en IMDb' : 'películas en IMDb')} que coincidan con: "${q}".
+Devuelve SOLO un array JSON, sin texto ni markdown, de hasta 8 objetos con estas claves exactas:
+{"title":"","year":"","id":"","by":"","rating":"","poster":""}
+- id: el identificador de IMDb (formato tt0000000) o el número de MyAnimeList.
+- by: director (o estudio si es anime).
+- rating: la nota de IMDb o MyAnimeList, solo el número.
+- poster: URL directa de la imagen del póster (m.media-amazon.com o cdn.myanimelist.net). Si no la sabes con certeza, deja "".
+Si no estás seguro de un dato, usa cadena vacía. Nunca inventes identificadores.`;
+
+const DETAIL_PROMPT = it => `Busca en la web la ficha de ${it.type === 'anime' ? 'MyAnimeList' : 'IMDb'} con identificador ${it.sourceId} ("${it.title}"${it.year ? ', ' + it.year : ''}).
+Devuelve SOLO un objeto JSON, sin texto ni markdown:
+{"poster":"","rating":"","by":"","year":""}
+poster debe ser la URL directa de la imagen del póster. Si no la encuentras con certeza, deja "".`;
+
+/* ============ render ============ */
+function renderFilters(){
+  const opts = [['all','Todo'],['movie','Películas'],['series','Series'],['anime','Anime']];
+  $('#filters').innerHTML = opts.map(([v,l]) =>
+    `<button class="chip" data-f="${v}" aria-pressed="${filter===v}">${l}</button>`).join('');
+  $('#filters').querySelectorAll('.chip').forEach(b => b.onclick = () => { filter = b.dataset.f; render(); });
+}
+
+function renderStats(){
+  const zs = items.filter(i => i.z != null).map(i => i.z);
+  const vs = items.filter(i => i.v != null).map(i => i.v);
+  const both = items.filter(i => i.z != null && i.v != null);
+  const avg = a => a.length ? (a.reduce((s,n)=>s+n,0)/a.length).toFixed(1) : '—';
+  const gap = both.length ? (both.reduce((s,i)=>s+Math.abs(i.z-i.v),0)/both.length).toFixed(1) : '—';
+  $('#stats').innerHTML = `
+    <div class="stat"><span class="n">${items.length}</span><span class="l">Títulos</span></div>
+    <div class="stat"><span class="n z">${avg(zs)}</span><span class="l">Promedio Z</span></div>
+    <div class="stat"><span class="n v">${avg(vs)}</span><span class="l">Promedio V</span></div>
+    <div class="stat"><span class="n">${gap}</span><span class="l">Brecha media</span></div>`;
+}
+
+function pos(n){ return ((n-1)/9)*100; }
+
+function tint(str){
+  let h = 0;
+  for (let i = 0; i < str.length; i++) h = (h * 31 + str.charCodeAt(i)) % 360;
+  return `--c1:hsl(${h},32%,93%); --c2:hsl(${(h+42)%360},26%,86%); --c3:hsl(${h},24%,42%)`;
+}
+
+function coverHTML(it){
+  return `<div class="ph" style="${tint(it.title)}">
+    <div><span class="ph-type">${TYPE_ES[it.type]}</span><div class="ph-rule"></div></div>
+    <div>
+      <span class="ph-title">${esc(it.title)}</span>
+      <span class="ph-year">${esc(it.year || '')}</span>
+    </div>
+  </div>`;
+}
+
+function cardHTML(it){
+  const hasZ = it.z != null, hasV = it.v != null;
+  const lo = hasZ && hasV ? Math.min(pos(it.z),pos(it.v)) : 0;
+  const w  = hasZ && hasV ? Math.abs(pos(it.z)-pos(it.v)) : 0;
+  const src = it.type === 'anime' ? 'MAL' : 'IMDb';
+  const poster = it.poster
+    ? `<img src="${esc(it.poster)}" alt="Póster de ${esc(it.title)}" loading="lazy">`
+    : coverHTML(it);
+  return `
+  <article class="card" data-id="${esc(it.id)}">
+    <div class="poster">
+      ${poster}
+      <a class="src" href="${esc(it.url)}" target="_blank" rel="noopener">
+        <b>${src}</b>${it.rating && it.rating !== 'N/A' ? `<span class="star">★</span>${esc(it.rating)}` : ''}
+      </a>
+      <button class="menu-btn" data-act="menu" aria-label="Opciones de ${esc(it.title)}">⋯</button>
+    </div>
+    <div class="meta">
+      <h3 class="t">${esc(it.title)}</h3>
+      <p class="d">${esc(it.year || '')}${it.by ? ` <span class="dot-sep">·</span> ${esc(it.by)}` : ''}</p>
+      <div class="scale" aria-hidden="true">
+        <div class="track"></div>
+        <div class="span" style="left:${lo}%; width:${w}%"></div>
+        ${hasZ ? `<div class="pt z" style="left:${pos(it.z)}%"></div>` : ''}
+        ${hasV ? `<div class="pt v" style="left:${pos(it.v)}%"></div>` : ''}
+      </div>
+      <div class="notes">
+        <button class="note z${hasZ?'':' empty'}" data-act="rate" data-who="z">
+          <span class="who">Z</span><span class="val">${hasZ ? it.z : '—'}</span></button>
+        <button class="note v${hasV?'':' empty'}" data-act="rate" data-who="v">
+          <span class="who">V</span><span class="val">${hasV ? it.v : '—'}</span></button>
+      </div>
+    </div>
+  </article>`;
+}
+
+function render(){
+  renderFilters(); renderStats();
+  const shown = filter === 'all' ? items : items.filter(i => i.type === filter);
+  const host = $('#months');
+  const nav = $('#monthnav');
+
+  if(!shown.length){
+    nav.innerHTML = '';
+    host.innerHTML = `<div class="empty-state">
+      <p>${items.length ? 'Nada de este tipo todavía.' : 'Aquí no hay nada aún. Agrega la primera película, serie o anime.'}</p>
+      <button class="btn" id="emptyAdd">Agregar un título</button></div>`;
+    const b = $('#emptyAdd'); if(b) b.onclick = openAdd;
+    return;
+  }
+
+  const groups = {};
+  shown.forEach(i => (groups[i.month] ||= []).push(i));
+  const keys = Object.keys(groups).sort();
+  if (monthSel !== 'all' && !keys.includes(monthSel)) monthSel = keys[keys.length - 1];
+
+  nav.innerHTML = keys.map(k => {
+    const {name, year} = label(k);
+    return `<button class="mtab" data-m="${k}" aria-pressed="${monthSel===k}">
+      ${name}<i>${year.slice(2)}</i><b>${groups[k].length}</b></button>`;
+  }).join('') + `<button class="mtab all" data-m="all" aria-pressed="${monthSel==='all'}">todo<b>${shown.length}</b></button>`;
+
+  nav.querySelectorAll('.mtab').forEach(b => b.onclick = () => { monthSel = b.dataset.m; render(); });
+
+  const visible = monthSel === 'all' ? keys : [monthSel];
+  host.innerHTML = visible.map(k => {
+    const head = monthSel === 'all'
+      ? `<div class="month-head"><h2>${label(k).name}</h2><span class="yr">${label(k).year}</span>
+         <span class="line"></span><span class="ct">${groups[k].length}</span></div>` : '';
+    return `<section class="month${monthSel==='all'?'':' solo'}">${head}
+      <div class="grid">${groups[k].map(cardHTML).join('')}</div></section>`;
+  }).join('');
+
+  host.querySelectorAll('.poster img').forEach(im => im.onerror = () => {
+    const card = im.closest('.card'); const it = items.find(i => i.id === card.dataset.id);
+    if(!it) return;
+    const d = document.createElement('div');
+    d.innerHTML = coverHTML(it);
+    im.replaceWith(d.firstElementChild);
+  });
+
+  host.querySelectorAll('[data-act]').forEach(b => {
+    b.onclick = () => {
+      const id = b.closest('.card').dataset.id;
+      if (b.dataset.act === 'rate') openRate(id, b.dataset.who);
+      else openMenu(id);
+    };
+  });
+}
+
+/* ============ capa de modales ============ */
+function closeLayer(){ $('#layer').innerHTML = ''; document.removeEventListener('keydown', escClose); }
+function escClose(e){ if(e.key === 'Escape') closeLayer(); }
+function openLayer(html){
+  $('#layer').innerHTML = `<div class="backdrop">${html}</div>`;
+  const bd = $('#layer .backdrop');
+  bd.onclick = e => { if(e.target === bd) closeLayer(); };
+  document.addEventListener('keydown', escClose);
+  const f = $('#layer input, #layer button'); if(f) f.focus();
+}
+
+/* ---- notas ---- */
+function openRate(id, who){
+  const it = items.find(i => i.id === id); if(!it) return;
+  const cur = it[who];
+  const name = who === 'z' ? 'Z' : 'V';
+  openLayer(`<div class="modal sm" role="dialog" aria-modal="true" aria-label="Nota de ${esc(name)}">
+    <div class="modal-head"><div>
+      <div class="who-label"><i class="swatch ${who}"></i><span>Nota de ${name}</span></div>
+      <h3>${esc(it.title)}</h3></div>
+      <button class="x" data-close aria-label="Cerrar">×</button></div>
+    <div class="grades ten" style="margin-top:16px">
+      ${Array.from({length:10},(_,k)=>k+1).map(n =>
+        `<button class="grade ${who}" data-n="${n}" aria-pressed="${cur===n}">${n}</button>`).join('')}
+    </div>
+    <div class="actions">
+      ${cur != null ? '<button class="btn ghost left" data-clear>Quitar nota</button>' : ''}
+      <button class="btn ghost" data-close>Cerrar</button>
+    </div></div>`);
+
+  $('#layer').querySelectorAll('.grade').forEach(g => g.onclick = async () => {
+    it[who] = +g.dataset.n; await save(); closeLayer(); render();
+  });
+  const cl = $('#layer [data-clear]');
+  if(cl) cl.onclick = async () => { it[who] = null; await save(); closeLayer(); render(); };
+  $('#layer').querySelectorAll('[data-close]').forEach(b => b.onclick = closeLayer);
+}
+
+/* ---- menú de tarjeta ---- */
+function openMenu(id){
+  const it = items.find(i => i.id === id); if(!it) return;
+  openLayer(`<div class="modal sm" role="dialog" aria-modal="true">
+    <div class="modal-head"><div><h3>${esc(it.title)}</h3>
+      <p class="lead">${TYPE_ES[it.type]} · ${esc(it.year||'')}</p></div>
+      <button class="x" data-close aria-label="Cerrar">×</button></div>
+    <div class="field"><label for="mv">Mes</label>
+      <select id="mv">${monthOptions().map(m => {
+        const {name,year} = label(m);
+        return `<option value="${m}"${m===it.month?' selected':''}>${name} ${year}</option>`;}).join('')}</select></div>
+    <div class="field"><label>Imagen</label>
+      <div class="row">
+        <button class="btn ghost" id="pick" style="flex:1">Subir desde el dispositivo</button>
+        ${it.poster ? `<button class="btn ghost" id="clearimg" style="flex:0 0 auto">Quitar</button>` : ''}
+      </div>
+      <input type="file" id="pf" accept="image/*" hidden></div>
+    <div class="field"><label for="mp2">…o pegar una URL</label>
+      <input type="text" id="mp2" value="${esc(it.poster && it.poster.startsWith('data:') ? '' : it.poster)}" placeholder="https://…"></div>
+    <p class="hint" style="margin:-6px 0 4px">Las URL externas no cargan dentro del visor de Claude. Subir la imagen sí funciona en todos lados.</p>
+    <div class="actions">
+      <button class="btn danger left" data-del>Eliminar</button>
+      <button class="btn ghost" data-close>Cancelar</button>
+      <button class="btn" data-save>Guardar</button>
+    </div></div>`);
+
+  let picked = null;
+  $('#pick').onclick = () => $('#pf').click();
+  $('#pf').onchange = async e => {
+    const f = e.target.files[0]; if(!f) return;
+    $('#pick').textContent = 'Procesando…';
+    try{ picked = await toCover(f); $('#pick').textContent = 'Imagen lista ✓'; }
+    catch(err){ $('#pick').textContent = 'No se pudo leer'; }
+  };
+  const ci = $('#clearimg'); if(ci) ci.onclick = async () => { it.poster = ''; await save(); closeLayer(); render(); };
+
+  $('#layer [data-save]').onclick = async () => {
+    it.month = $('#mv').value;
+    monthSel = it.month;
+    if (picked) it.poster = picked;
+    else { const u = $('#mp2').value.trim(); if (u) it.poster = u; }
+    await save(); closeLayer(); render(); toast('Guardado');
+  };
+  $('#layer [data-del]').onclick = async () => { items = items.filter(i => i.id !== id); await save(); closeLayer(); render(); toast('Eliminado'); };
+  $('#layer').querySelectorAll('[data-close]').forEach(b => b.onclick = closeLayer);
+}
+
+/* ---- agregar ---- */
+let tab = 'movie';
+function openAdd(){
+  openLayer(`<div class="modal" role="dialog" aria-modal="true" aria-label="Agregar título">
+    <div class="modal-head"><div><h3>Agregar un título</h3>
+      <p class="lead">Busca y se completa solo: póster, año, dirección y rating.</p></div>
+      <button class="x" data-close aria-label="Cerrar">×</button></div>
+    <div class="tabs" role="tablist">
+      <button role="tab" data-tab="movie">Película</button>
+      <button role="tab" data-tab="series">Serie</button>
+      <button role="tab" data-tab="anime">Anime</button>
+      <button role="tab" data-tab="manual">Manual</button>
+    </div>
+    <div id="panel"></div></div>`);
+  $('#layer').querySelectorAll('[data-tab]').forEach(b => b.onclick = () => { tab = b.dataset.tab; paintTab(); });
+  $('#layer [data-close]').onclick = closeLayer;
+  paintTab();
+}
+
+function paintTab(){
+  $('#layer').querySelectorAll('[data-tab]').forEach(b => b.setAttribute('aria-selected', b.dataset.tab === tab));
+  const p = $('#panel');
+
+  if (tab === 'manual'){
+    p.innerHTML = `
+      <div class="field"><label for="mt">Título</label><input type="text" id="mt" placeholder="Nombre del título"></div>
+      <div class="row">
+        <div class="field"><label for="my">Año</label><input type="text" id="my" placeholder="2026"></div>
+        <div class="field"><label for="mb">Dirección o estudio</label><input type="text" id="mb" placeholder="Opcional"></div>
+      </div>
+      <div class="field"><label for="mp">URL del póster</label><input type="text" id="mp" placeholder="Opcional — https://..."></div>
+      <div class="field"><label for="ml">Enlace</label><input type="text" id="ml" placeholder="Opcional — IMDb o MyAnimeList"></div>
+      <div class="actions"><button class="btn ghost" data-close>Cancelar</button>
+        <button class="btn" id="mgo">Continuar</button></div>`;
+    $('#mgo').onclick = () => {
+      const t = $('#mt').value.trim(); if(!t){ $('#mt').focus(); return; }
+      step2({title:t, year:$('#my').value.trim(), by:$('#mb').value.trim(), poster:$('#mp').value.trim(),
+             url:$('#ml').value.trim(), rating:'', sourceId:'', type:'movie'});
+    };
+    $('#panel [data-close]').onclick = closeLayer;
+    return;
+  }
+
+  const needsKey = (tab === 'movie' || tab === 'series') && !omdbKey;
+  p.innerHTML = `
+    ${needsKey ? `<div class="callout"><p class="hint">Para buscar en IMDb necesitas una key gratuita de OMDb.
+      Pídela en <a href="https://www.omdbapi.com/apikey.aspx" target="_blank" rel="noopener">omdbapi.com/apikey.aspx</a>,
+      elige la opción gratuita, y actívala desde el correo que te llega.</p>
+      <div class="search-row" style="margin-top:12px">
+        <input type="text" id="kin" placeholder="Pega tu key aquí">
+        <button class="btn" id="ksave">Guardar</button></div></div>` : ''}
+    <div class="search-row">
+      <input type="search" id="q" placeholder="${tab==='anime'?'Buscar anime en MyAnimeList…':'Buscar en IMDb…'}" ${needsKey?'disabled':''}>
+      <button class="btn" id="go" ${needsKey?'disabled':''}>Buscar</button>
+    </div>
+    <div class="results" id="res"></div>`;
+
+  if (needsKey){
+    $('#ksave').onclick = async () => {
+      const v = $('#kin').value.trim(); if(!v) return;
+      omdbKey = v; await store(KEY_API, v); paintTab(); toast('Key guardada');
+    };
+    return;
+  }
+
+  const q = $('#q');
+  let t;
+  const run = () => doSearch(q.value.trim());
+  q.oninput = () => { clearTimeout(t); if(q.value.trim().length >= 3) t = setTimeout(run, 500); };
+  q.onkeydown = e => { if(e.key === 'Enter'){ clearTimeout(t); run(); } };
+  $('#go').onclick = run;
+  q.focus();
+}
+
+async function doSearch(q){
+  if(!q) return;
+  const res = $('#res'); res.innerHTML = `<div class="status">Buscando…</div>`;
+  let list = null;
+
+  if (!viaBridge){
+    try{
+      if (tab === 'anime'){
+        const r = await fetch(`https://api.jikan.moe/v4/anime?q=${encodeURIComponent(q)}&limit=10&sfw=true`);
+        const d = await r.json();
+        list = (d.data || []).map(a => ({
+          title: a.title_english || a.title,
+          year: a.year || (a.aired && a.aired.prop && a.aired.prop.from ? a.aired.prop.from.year : ''),
+          poster: a.images && a.images.jpg ? a.images.jpg.image_url : '',
+          rating: a.score ? String(a.score) : '',
+          url: a.url, sourceId: String(a.mal_id), type: 'anime',
+          by: (a.studios && a.studios[0]) ? a.studios[0].name : ''
+        }));
+      } else {
+        const r = await fetch(`https://www.omdbapi.com/?apikey=${encodeURIComponent(omdbKey)}&type=${tab}&s=${encodeURIComponent(q)}`);
+        const d = await r.json();
+        if (d.Response === 'False' && d.Error === 'Invalid API key!'){
+          res.innerHTML = `<div class="status">La key no es válida o aún no está activada.</div>`; return;
+        }
+        list = (d.Search || []).map(m => ({
+          title: m.Title, year: m.Year, poster: m.Poster !== 'N/A' ? m.Poster : '',
+          rating: '', url: `https://www.imdb.com/title/${m.imdbID}/`, sourceId: m.imdbID,
+          type: tab, by: ''
+        }));
+      }
+    }catch(e){ viaBridge = true; list = null; }
+  }
+
+  if (list === null){
+    res.innerHTML = `<div class="status">Buscando en la web…</div>`;
+    try{
+      const raw = await bridge(SEARCH_PROMPT(q, tab));
+      list = (Array.isArray(raw) ? raw : []).filter(x => x && x.title).map(x => ({
+        title: x.title, year: x.year ? String(x.year) : '', poster: x.poster || '',
+        rating: x.rating ? String(x.rating) : '', sourceId: x.id ? String(x.id) : '', type: tab,
+        by: x.by || '',
+        url: tab === 'anime'
+          ? (x.id ? `https://myanimelist.net/anime/${x.id}` : 'https://myanimelist.net/')
+          : (x.id ? `https://www.imdb.com/title/${x.id}/` : 'https://www.imdb.com/')
+      }));
+    }catch(e){
+      res.innerHTML = `<div class="status">No se pudo buscar. Usa la pestaña Manual para agregarlo a mano.</div>`;
+      return;
+    }
+  }
+
+  if(!list.length){ res.innerHTML = `<div class="status">Sin resultados.</div>`; return; }
+  res.innerHTML = list.map((x,i) => `
+    <button class="res" data-i="${i}">
+      ${x.poster ? `<img src="${esc(x.poster)}" alt="" loading="lazy">` : `<div class="noimg"></div>`}
+      <span class="info"><span class="rt">${esc(x.title)}</span>
+      <span class="rm">${esc(x.year||'—')}${x.rating?` · ★ ${esc(x.rating)}`:''}</span></span>
+    </button>`).join('');
+  res.querySelectorAll('.res img').forEach(im => im.onerror = () => {
+    const d = document.createElement('div'); d.className = 'noimg'; im.replaceWith(d);
+  });
+  res.querySelectorAll('.res').forEach(b => b.onclick = () => step2(list[+b.dataset.i]));
+}
+
+async function step2(base){
+  if (!viaBridge && base.sourceId && base.type !== 'anime' && omdbKey){
+    try{
+      const r = await fetch(`https://www.omdbapi.com/?apikey=${encodeURIComponent(omdbKey)}&i=${base.sourceId}`);
+      const d = await r.json();
+      if (d.Response === 'True'){
+        base.by = d.Director && d.Director !== 'N/A' ? d.Director.split(',')[0].trim() : base.by;
+        base.rating = d.imdbRating && d.imdbRating !== 'N/A' ? d.imdbRating : '';
+        if (d.Poster && d.Poster !== 'N/A') base.poster = d.Poster;
+      }
+    }catch(e){}
+  }
+  let z = null, v = null;
+  const m = thisMonth();
+  openLayer(`<div class="modal" role="dialog" aria-modal="true" aria-label="Confirmar título">
+    <div class="modal-head"><div><h3>Ponerle nota</h3>
+      <p class="lead">Elige el mes y la nota de cada uno. Puedes dejarlas en blanco y ponerlas después.</p></div>
+      <button class="x" data-close aria-label="Cerrar">×</button></div>
+    <div class="preview">
+      ${base.poster ? `<img src="${esc(base.poster)}" alt="">` : `<div class="noimg"></div>`}
+      <div><h4>${esc(base.title)}</h4>
+      <p>${esc(base.year||'')}${base.by?` · ${esc(base.by)}`:''} · ${TYPE_ES[base.type]}${base.rating?` · ★ ${esc(base.rating)}`:''}</p></div>
+    </div>
+    <div class="field"><label for="ms">Mes</label>
+      <select id="ms">${monthOptions().map(k => {
+        const {name,year} = label(k);
+        return `<option value="${k}"${k===m?' selected':''}>${name} ${year}</option>`;}).join('')}</select></div>
+    <div class="field"><div class="who-label"><i class="swatch z"></i><span>Nota de Z</span></div>
+      <div class="grades ten" id="gz">${Array.from({length:10},(_,k)=>k+1).map(n=>`<button class="grade z" data-n="${n}">${n}</button>`).join('')}</div></div>
+    <div class="field"><div class="who-label"><i class="swatch v"></i><span>Nota de V</span></div>
+      <div class="grades ten" id="gv">${Array.from({length:10},(_,k)=>k+1).map(n=>`<button class="grade v" data-n="${n}">${n}</button>`).join('')}</div></div>
+    <div class="actions"><button class="btn ghost" data-close>Cancelar</button>
+      <button class="btn" id="commit">Agregar al diario</button></div></div>`);
+
+  const wire = (sel, set) => $(sel).querySelectorAll('.grade').forEach(g => g.onclick = () => {
+    const on = g.getAttribute('aria-pressed') === 'true';
+    $(sel).querySelectorAll('.grade').forEach(o => o.setAttribute('aria-pressed','false'));
+    g.setAttribute('aria-pressed', on ? 'false' : 'true');
+    set(on ? null : +g.dataset.n);
+  });
+  wire('#gz', n => z = n); wire('#gv', n => v = n);
+
+  $('#commit').onclick = async () => {
+    items.push({ id: 'i' + Date.now() + Math.random().toString(36).slice(2,6),
+      title: base.title, year: base.year, type: base.type, by: base.by,
+      poster: base.poster, sourceId: base.sourceId, url: base.url, rating: base.rating,
+      month: $('#ms').value, z, v });
+    monthSel = $('#ms').value;
+    await save(); closeLayer(); render(); toast('Agregado');
+  };
+  $('#layer').querySelectorAll('[data-close]').forEach(b => b.onclick = closeLayer);
+}
+
+/* ---- convierte una imagen local en portada 2:3 compacta ---- */
+function toCover(file){
+  return new Promise((resolve, reject) => {
+    const fr = new FileReader();
+    fr.onerror = () => reject(new Error('read'));
+    fr.onload = () => {
+      const img = new Image();
+      img.onerror = () => reject(new Error('decode'));
+      img.onload = () => {
+        const W = 320, H = 480;
+        const c = document.createElement('canvas');
+        c.width = W; c.height = H;
+        const g = c.getContext('2d');
+        const s = Math.max(W / img.width, H / img.height);
+        const w = img.width * s, h = img.height * s;
+        g.drawImage(img, (W - w) / 2, (H - h) / 2, w, h);
+        resolve(c.toDataURL('image/jpeg', 0.72));
+      };
+      img.src = fr.result;
+    };
+    fr.readAsDataURL(file);
+  });
+}
+
+/* ---- completar posters que faltan ---- */
+async function fetchOne(it){
+  if(!it || !it.sourceId) return false;
+  const apply = d => {
+    if (d.poster) it.poster = d.poster;
+    if (d.rating) it.rating = String(d.rating);
+    if (d.by && !it.by) it.by = d.by;
+    if (d.year && !it.year) it.year = String(d.year);
+    return !!it.poster;
+  };
+  if (!viaBridge){
+    try{
+      if (it.type === 'anime'){
+        const r = await fetch(`https://api.jikan.moe/v4/anime/${encodeURIComponent(it.sourceId)}`);
+        const a = (await r.json()).data;
+        if (a) return apply({
+          poster: a.images && a.images.jpg ? a.images.jpg.large_image_url : '',
+          rating: a.score || '', by: a.studios && a.studios[0] ? a.studios[0].name : '', year: a.year || ''
+        });
+      } else if (omdbKey){
+        const r = await fetch(`https://www.omdbapi.com/?apikey=${encodeURIComponent(omdbKey)}&i=${encodeURIComponent(it.sourceId)}`);
+        const d = await r.json();
+        if (d.Response === 'True') return apply({
+          poster: d.Poster && d.Poster !== 'N/A' ? d.Poster : '',
+          rating: d.imdbRating && d.imdbRating !== 'N/A' ? d.imdbRating : '',
+          by: d.Director && d.Director !== 'N/A' ? d.Director.split(',')[0].trim() : '',
+          year: d.Year || ''
+        });
+      }
+    }catch(e){ viaBridge = true; }
+  }
+  try{ return apply(await bridge(DETAIL_PROMPT(it))); }
+  catch(e){ return false; }
+}
+
+async function backfill(announce){
+  let changed = 0;
+  for (const it of items){
+    if (it.sourceId && (!it.poster || !it.rating)){
+      if (await fetchOne(it)) changed++;
+    }
+  }
+  if (changed){ await save(); render(); }
+  if (announce) toast(changed ? `${changed} póster${changed>1?'es':''} actualizado${changed>1?'s':''}` : 'Nada nuevo que traer');
+}
+
+/* ---- ajustes ---- */
+function openSettings(){
+  openLayer(`<div class="modal sm" role="dialog" aria-modal="true">
+    <div class="modal-head"><div><h3>Ajustes</h3>
+      <p class="lead">Tu key de OMDb y una copia de tus datos.</p></div>
+      <button class="x" data-close aria-label="Cerrar">×</button></div>
+    <div class="field"><label for="sk">Key de OMDb</label>
+      <input type="text" id="sk" value="${esc(omdbKey)}" placeholder="Aún sin key"></div>
+    <p class="hint" style="margin:-6px 0 18px">¿No tienes?
+      <a href="https://www.omdbapi.com/apikey.aspx" target="_blank" rel="noopener">Pídela gratis aquí</a> y actívala desde el correo.</p>
+    <div class="actions">
+      <button class="btn ghost left" id="exp">Exportar</button>
+      <button class="btn ghost" id="imp">Importar</button>
+      <button class="btn" id="expHtml">Descargar la página</button>
+      <button class="btn ghost" id="sksave">Guardar key</button>
+    </div>
+    <p class="hint" style="margin-top:12px">«Descargar la página» te baja un archivo con el diario completo dentro —
+      pósters incluidos. Lo abres con doble clic y todo está ahí, sin depender de nada.</p>
+    <div id="diag" style="margin-top:18px; padding-top:16px; border-top:1px solid var(--rule)">
+      <button class="btn ghost" id="run" style="font-size:12px; padding:7px 14px">Probar conexión</button>
+      <div id="diagout"></div>
+    </div>
+    <input type="file" id="fin" accept="application/json" hidden></div>`);
+
+  $('#run').onclick = async () => {
+    const out = $('#diagout');
+    out.innerHTML = `<p class="hint" style="margin-top:14px">Probando…</p>`;
+    const rows = [];
+    const img = await new Promise(r => {
+      const i = new Image();
+      i.onload = () => r(true); i.onerror = () => r(false);
+      setTimeout(() => r(false), 6000);
+      i.src = HOUSEMAID_IMG + '?t=' + Date.now();
+    });
+    rows.push(['Imágenes externas', img]);
+    let omdb = false;
+    try{ const r = await fetch(`https://www.omdbapi.com/?apikey=${encodeURIComponent(omdbKey)}&i=tt27543632`);
+         omdb = (await r.json()).Response === 'True'; }catch(e){}
+    rows.push(['OMDb (IMDb)', omdb]);
+    let mal = false;
+    try{ const r = await fetch('https://api.jikan.moe/v4/anime/1'); mal = !!(await r.json()).data; }catch(e){}
+    rows.push(['MyAnimeList', mal]);
+    let ai = false;
+    try{ ai = Array.isArray(await bridge('Responde solo con este JSON exacto: [{"ok":1}]')); }catch(e){}
+    rows.push(['Búsqueda alternativa', ai]);
+    out.innerHTML = `<p class="hint" style="margin-top:14px">` + rows.map(([n,ok]) =>
+      `${ok ? '✓' : '✕'} ${n}`).join('<br>') +
+      `</p><p class="hint" style="margin-top:10px; color:var(--ink-faint)">${
+        rows.every(([,o]) => o) ? 'Todo funcionando.' :
+        'Lo que sale ✕ está bloqueado por el visor. Descarga el archivo y ábrelo desde tu computador para que funcione completo.'}</p>`;
+  };
+
+  $('#sksave').onclick = async () => { omdbKey = $('#sk').value.trim(); await store(KEY_API, omdbKey); closeLayer(); toast('Guardado'); };
+  $('#exp').onclick = () => {
+    const b = new Blob([JSON.stringify(items,null,2)], {type:'application/json'});
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(b); a.download = 'zv-diario.json'; a.click();
+  };
+  $('#expHtml').onclick = () => {
+    const data = `<scr` + `ipt>window.__ZV_DATA=${JSON.stringify(items)};window.__ZV_KEY=${JSON.stringify(omdbKey)};</scr` + `ipt>`;
+    const src = '<!DOCTYPE html>' + document.documentElement.outerHTML;
+    const out = src.replace('</head>', data + '</head>');
+    const b = new Blob([out], {type:'text/html'});
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(b); a.download = 'zv-diario.html'; a.click();
+    toast('Descargado con tus datos dentro');
+  };
+  $('#imp').onclick = () => $('#fin').click();
+  $('#fin').onchange = async e => {
+    const f = e.target.files[0]; if(!f) return;
+    try{
+      const parsed = JSON.parse(await f.text());
+      if(Array.isArray(parsed)){ items = parsed; await save(); closeLayer(); render(); toast('Datos importados'); }
+    }catch(err){ toast('El archivo no se pudo leer'); }
+  };
+  $('#layer [data-close]').onclick = closeLayer;
+}
+
+/* ============ arranque ============ */
+(async function init(){
+  await checkPersist();
+  const raw = await load(KEY_DATA);
+  omdbKey = (await load(KEY_API)) || window.__ZV_KEY || DEFAULT_OMDB;
+
+  if (raw){ try{ items = JSON.parse(raw); }catch(e){ items = []; } }
+  if (!items.length && Array.isArray(window.__ZV_DATA)) items = window.__ZV_DATA;
+  if (!items.length) items = SEED.slice();
+  const seed = items.find(i => i.id === 'seed-housemaid');
+  if (seed && seed.poster === HOUSEMAID_IMG) seed.poster = '';
+  await save();
+
+  $('#storeNote').textContent = persistOK ? 'Se guarda solo' : 'No se está guardando';
+
+  if (!persistOK){
+    const w = document.createElement('div');
+    w.className = 'warn';
+    w.innerHTML = `<span>Este visor no está guardando tus cambios. Descarga la página para conservarlos.</span>
+      <button class="btn" id="warnDl">Descargar</button>`;
+    document.querySelector('.hero').before(w);
+    $('#warnDl').onclick = openSettings;
+  }
+
+  $('#addBtn').onclick = openAdd;
+  $('#settingsBtn').onclick = openSettings;
+
+  const bar = document.querySelector('.bar');
+  const onScroll = () => bar.classList.toggle('stuck', window.scrollY > 8);
+  window.addEventListener('scroll', onScroll, {passive:true});
+  onScroll();
+  render();
+})();
+</script>
+</body>
+</html>
