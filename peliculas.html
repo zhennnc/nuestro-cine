@@ -512,11 +512,11 @@ async function fetchRemoteData(){
   }catch(e){ return null; }
 }
 
-async function syncToGithub(){
+async function syncToGithub(silent){
   if(!ghToken || syncing) return;
   syncing = true;
   const url = `https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/${GH_PATH}`;
-  const maxTries = 4;
+  const maxTries = 6;
   try{
     let lastErr;
     for (let attempt = 0; attempt < maxTries; attempt++){
@@ -540,7 +540,7 @@ async function syncToGithub(){
         const err = await put.json().catch(()=>({}));
         lastErr = new Error('PUT ' + put.status + ': ' + (err.message || 'error al sincronizar'));
         if (put.status !== 409) throw lastErr;
-        await new Promise(res => setTimeout(res, 300 + Math.random() * 400));
+        await new Promise(res => setTimeout(res, 400 + Math.random() * 900));
       }catch(e){
         lastErr = e;
         if (!String(e.message || '').includes('409')) throw e;
@@ -549,7 +549,12 @@ async function syncToGithub(){
     throw lastErr || new Error('no se pudo sincronizar tras varios intentos');
   }catch(e){
     console.error('sync error', e);
-    toast('No se pudo sincronizar: ' + (e && e.message ? e.message : 'error desconocido'));
+    if (!silent){
+      // reintento silencioso en segundo plano antes de molestar al usuario
+      setTimeout(() => { syncToGithub(true); }, 4000);
+    } else {
+      toast('No se pudo sincronizar: ' + (e && e.message ? e.message : 'error desconocido'));
+    }
   } finally {
     syncing = false;
   }
