@@ -740,10 +740,10 @@ function openRate(id, who){
     </div></div>`);
 
   $('#layer').querySelectorAll('.grade').forEach(g => g.onclick = async () => {
-    it[who] = +g.dataset.n; await save(); closeLayer(); render();
+    it[who] = +g.dataset.n; it.updatedAt = Date.now(); await save(); closeLayer(); render();
   });
   const cl = $('#layer [data-clear]');
-  if(cl) cl.onclick = async () => { it[who] = null; await save(); closeLayer(); render(); };
+  if(cl) cl.onclick = async () => { it[who] = null; it.updatedAt = Date.now(); await save(); closeLayer(); render(); };
   $('#layer').querySelectorAll('[data-close]').forEach(b => b.onclick = closeLayer);
 }
 
@@ -781,13 +781,14 @@ function openMenu(id){
     try{ picked = await toCover(f); $('#pick').textContent = 'Imagen lista ✓'; }
     catch(err){ $('#pick').textContent = 'No se pudo leer'; }
   };
-  const ci = $('#clearimg'); if(ci) ci.onclick = async () => { it.poster = ''; await save(); closeLayer(); render(); };
+  const ci = $('#clearimg'); if(ci) ci.onclick = async () => { it.poster = ''; it.updatedAt = Date.now(); await save(); closeLayer(); render(); };
 
   $('#layer [data-save]').onclick = async () => {
     it.month = $('#mv').value;
     monthSel = it.month;
     if (picked) it.poster = picked;
     else { const u = $('#mp2').value.trim(); if (u) it.poster = u; }
+    it.updatedAt = Date.now();
     await save(); closeLayer(); render(); toast('Guardado');
   };
   $('#layer [data-del]').onclick = async () => { items = items.filter(i => i.id !== id); await save(); closeLayer(); render(); toast('Eliminado'); };
@@ -958,7 +959,7 @@ async function step2(base){
     items.push({ id: 'i' + Date.now() + Math.random().toString(36).slice(2,6),
       title: base.title, year: base.year, type: base.type, by: base.by,
       poster: base.poster, sourceId: base.sourceId, url: base.url, rating: base.rating,
-      month: $('#ms').value, z, v });
+      month: $('#ms').value, z, v, updatedAt: Date.now() });
     monthSel = $('#ms').value;
     await save(); closeLayer(); render(); toast('Agregado');
   };
@@ -997,6 +998,7 @@ async function fetchOne(it){
     if (d.rating) it.rating = String(d.rating);
     if (d.by && !it.by) it.by = d.by;
     if (d.year && !it.year) it.year = String(d.year);
+    it.updatedAt = Date.now();
     return !!it.poster;
   };
   try{
@@ -1119,7 +1121,11 @@ function openSettings(){
     const f = e.target.files[0]; if(!f) return;
     try{
       const parsed = JSON.parse(await f.text());
-      if(Array.isArray(parsed)){ items = parsed; await save(); closeLayer(); render(); toast('Datos importados'); }
+      if(Array.isArray(parsed)){
+        const now = Date.now();
+        items = parsed.map(it => ({ ...it, updatedAt: now }));
+        await save(); closeLayer(); render(); toast('Datos importados');
+      }
     }catch(err){ toast('El archivo no se pudo leer'); }
   };
   $('#layer [data-close]').onclick = closeLayer;
@@ -1137,10 +1143,16 @@ function openSettings(){
 
   const remote = await fetchRemoteData();
   if (remote && remote.length){
-    // fusiona: lo local manda (por si el servidor aún no reflejó un cambio reciente),
-    // y se suman los títulos que existan en el servidor pero no localmente todavía.
-    const localIds = new Set(localItems.map(i => i.id));
-    items = localItems.concat(remote.filter(r => !localIds.has(r.id)));
+    // fusiona por título: para cada id se queda la versión con updatedAt más reciente,
+    // así se reciben cambios de otros dispositivos sin perder una edición local muy reciente
+    // que el servidor todavía no alcanzó a reflejar.
+    const map = new Map();
+    localItems.forEach(i => map.set(i.id, i));
+    remote.forEach(r => {
+      const loc = map.get(r.id);
+      if (!loc || (r.updatedAt || 0) > (loc.updatedAt || 0)) map.set(r.id, r);
+    });
+    items = Array.from(map.values());
   } else {
     items = localItems;
   }
