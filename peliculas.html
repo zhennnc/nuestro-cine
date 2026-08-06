@@ -1132,11 +1132,18 @@ function openSettings(){
   omdbKey = (await load(KEY_API)) || window.__ZV_KEY || DEFAULT_OMDB;
   ghToken = (await load(KEY_GH)) || '';
 
+  let localItems = [];
+  if (raw){ try{ localItems = JSON.parse(raw); }catch(e){ localItems = []; } }
+
   const remote = await fetchRemoteData();
   if (remote && remote.length){
-    items = remote;
-    await store(KEY_DATA, JSON.stringify(items));
-  } else if (raw){ try{ items = JSON.parse(raw); }catch(e){ items = []; } }
+    // fusiona: lo local manda (por si el servidor aún no reflejó un cambio reciente),
+    // y se suman los títulos que existan en el servidor pero no localmente todavía.
+    const localIds = new Set(localItems.map(i => i.id));
+    items = localItems.concat(remote.filter(r => !localIds.has(r.id)));
+  } else {
+    items = localItems;
+  }
   if (!items.length && Array.isArray(window.__ZV_DATA)) items = window.__ZV_DATA;
   if (!items.length) items = SEED.slice();
   const seed = items.find(i => i.id === 'seed-housemaid');
