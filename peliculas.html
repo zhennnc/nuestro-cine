@@ -397,9 +397,16 @@ footer{margin-top:70px; padding-top:22px; border-top:1px solid var(--rule); font
 /* ============ almacenamiento ============ */
 const KEY_DATA = 'zv:data';
 const KEY_API  = 'zv:omdb';
+const KEY_GH   = 'zv:ghtoken';
 const DEFAULT_OMDB = '83918a08';
+const GH_OWNER = 'zhennnc';
+const GH_REPO  = 'nuestro-cine';
+const GH_BRANCH = 'main';
+const GH_PATH  = 'data.json';
 let memory = {};
 let persistOK = false;
+let ghToken = '';
+let syncing = false;
 
 async function store(k, v){
   memory[k] = v;
@@ -490,7 +497,49 @@ function toast(msg){
   document.body.appendChild(el);
   setTimeout(()=>el.remove(), 2400);
 }
-async function save(){ await store(KEY_DATA, JSON.stringify(items)); }
+async function save(){
+  await store(KEY_DATA, JSON.stringify(items));
+  syncToGithub();
+}
+
+/* ---- sincronización automática con GitHub (para que todos vean lo mismo) ---- */
+async function fetchRemoteData(){
+  try{
+    const r = await fetch(`./${GH_PATH}?t=${Date.now()}`, {cache:'no-store'});
+    if(!r.ok) return null;
+    const d = await r.json();
+    return Array.isArray(d) ? d : null;
+  }catch(e){ return null; }
+}
+
+async function syncToGithub(){
+  if(!ghToken || syncing) return;
+  syncing = true;
+  try{
+    const url = `https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/${GH_PATH}`;
+    let sha = null;
+    try{
+      const r = await fetch(`${url}?ref=${GH_BRANCH}`, {headers:{Authorization:`token ${ghToken}`, Accept:'application/vnd.github+json'}});
+      if(r.ok){ const d = await r.json(); sha = d.sha; }
+    }catch(e){}
+    const content = btoa(unescape(encodeURIComponent(JSON.stringify(items, null, 2))));
+    const body = { message: 'Actualiza datos — ' + new Date().toISOString(), content, branch: GH_BRANCH };
+    if(sha) body.sha = sha;
+    const put = await fetch(url, {
+      method:'PUT',
+      headers:{ Authorization:`token ${ghToken}`, Accept:'application/vnd.github+json', 'Content-Type':'application/json' },
+      body: JSON.stringify(body)
+    });
+    if(!put.ok){
+      const err = await put.json().catch(()=>({}));
+      throw new Error(err.message || 'Error al sincronizar');
+    }
+  }catch(e){
+    toast('No se pudo sincronizar con GitHub');
+  } finally {
+    syncing = false;
+  }
+}
 
 /* ---- puente: si el navegador bloquea las APIs, preguntamos vía Claude ---- */
 let viaBridge = false;
@@ -1012,6 +1061,14 @@ function openSettings(){
       <input type="text" id="sk" value="${esc(omdbKey)}" placeholder="Aún sin key"></div>
     <p class="hint" style="margin:-6px 0 18px">¿No tienes?
       <a href="https://www.omdbapi.com/apikey.aspx" target="_blank" rel="noopener">Pídela gratis aquí</a> y actívala desde el correo.</p>
+    <div class="callout">
+      <p class="hint"><b>Sincronización automática:</b> ${ghToken ? 'activa en este dispositivo ✓' : 'no configurada en este dispositivo'}.
+      Pega aquí tu token de GitHub (uno solo, el mismo en todos los dispositivos) para que lo que agregues o califiques se suba solo y se vea igual para ambos, sin pedírmelo a mí cada vez. El cambio tarda ~30-60s en reflejarse en la página.</p>
+      <div class="search-row" style="margin-top:10px">
+        <input type="text" id="ghin" value="${esc(ghToken)}" placeholder="Token de GitHub (github_pat_...)">
+        <button class="btn" id="ghsave">Guardar</button>
+      </div>
+    </div>
     <div class="actions">
       <button class="btn ghost left" id="exp">Exportar</button>
       <button class="btn ghost" id="imp">Importar</button>
@@ -1055,6 +1112,12 @@ function openSettings(){
   };
 
   $('#sksave').onclick = async () => { omdbKey = $('#sk').value.trim(); await store(KEY_API, omdbKey); closeLayer(); toast('Guardado'); };
+  $('#ghsave').onclick = async () => {
+    ghToken = $('#ghin').value.trim();
+    await store(KEY_GH, ghToken);
+    toast(ghToken ? 'Sincronización activada en este dispositivo' : 'Token borrado');
+    closeLayer(); openSettings();
+  };
   $('#exp').onclick = () => {
     const b = new Blob([JSON.stringify(items,null,2)], {type:'application/json'});
     const a = document.createElement('a');
@@ -1085,8 +1148,13 @@ function openSettings(){
   await checkPersist();
   const raw = await load(KEY_DATA);
   omdbKey = (await load(KEY_API)) || window.__ZV_KEY || DEFAULT_OMDB;
+  ghToken = (await load(KEY_GH)) || '';
 
-  if (raw){ try{ items = JSON.parse(raw); }catch(e){ items = []; } }
+  const remote = await fetchRemoteData();
+  if (remote && remote.length){
+    items = remote;
+    await store(KEY_DATA, JSON.stringify(items));
+  } else if (raw){ try{ items = JSON.parse(raw); }catch(e){ items = []; } }
   if (!items.length && Array.isArray(window.__ZV_DATA)) items = window.__ZV_DATA;
   if (!items.length) items = SEED.slice();
   const seed = items.find(i => i.id === 'seed-housemaid');
