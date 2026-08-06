@@ -687,8 +687,8 @@ function render(){
 
   nav.querySelectorAll('.mtab').forEach(b => b.onclick = () => { monthSel = b.dataset.m; render(); });
 
-  const visible = monthSel === 'all' ? keys : [monthSel];
-  host.innerHTML = visible.map(k => {
+  const visibleMonths = monthSel === 'all' ? keys : [monthSel];
+  host.innerHTML = visibleMonths.map(k => {
     const head = monthSel === 'all'
       ? `<div class="month-head"><h2>${label(k).name}</h2><span class="yr">${label(k).year}</span>
          <span class="line"></span><span class="ct">${groups[k].length}</span></div>` : '';
